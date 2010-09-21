@@ -20,8 +20,8 @@ build/liblucene4-java::
 	cd lucene && $(ANT) jar build-contrib
 
 install/liblucene4-java::
-	mkdir -p $(ARTIFACTS)/tests
-	cp -R lucene/build/test $(ARTIFACTS)/tests/lucene
+	mkdir -p $(ARTIFACTS)/tests/lucene
+	-cp -R lucene/build/test/* $(ARTIFACTS)/tests/lucene
 
 	install -m 0755 -d $(DEB_DESTDIR)/usr/bin $(DEB_DESTDIR)/usr/share/java
 	install lucene/contrib/lucli/run.sh $(DEB_DESTDIR)/usr/bin/lucli
@@ -55,11 +55,8 @@ install/solr-common::
 
 
 build/solr-doc::
-	cd solr && $(ANT) javadocs-all
+	cd solr && $(ANT) javadoc-all
 
 install/solr-doc::
-	install -m 0755 -d $(DEB_DESTDIR)/usr/share/doc/$(cdbs_curpkg)
-	install -m 0755 -d $(DEB_DESTDIR)/usr/share/java
-	cp -R solr/build/docs/* $(DEB_DESTDIR)/usr/share/doc/$(cdbs_curpkg)
-	install -m 0644 $(shell find $(CURDIR)/solr/build -name \*javadoc.jar) \
-        $(DEB_DESTDIR)/usr/share/java
+	install -m 0755 -d $(DEB_DESTDIR)/usr/share/doc/solr
+	cp -R solr/build/docs/* $(DEB_DESTDIR)/usr/share/doc/solr
