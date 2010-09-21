@@ -5,7 +5,6 @@
 /usr/share/java/apache-solr-dataimporthandler-4.0-dev.jar /usr/share/java/apache-solr-dataimporthandler.jar
 /usr/share/java/apache-solr-dataimporthandler-extras-4.0-dev.jar /usr/share/java/apache-solr-dataimporthandler-extras.jar
 /usr/share/java/apache-solr-solrj-4.0-dev.jar /usr/share/java/apache-solr-solrj.jar
-
 /usr/share/solr/WEB-INF/lib/apache-solr-cell.jar /usr/share/java/apache-solr-cell.jar
 /usr/share/solr/WEB-INF/lib/apache-solr-clustering.jar /usr/share/java/apache-solr-clustering.jar
 /usr/share/solr/WEB-INF/lib/apache-solr-core.jar /usr/share/java/apache-solr-core.jar
