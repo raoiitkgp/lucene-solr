@@ -1,0 +1,18 @@
+Package: solr-tomcat
+Source: lucene-solr
+Version: 4.0+20100920-1
+Architecture: all
+Maintainer: SimpleGeo Nerds <nerds@simplegeo.com>
+Installed-Size: 32
+Depends: solr-common (= 4.0+20100920-1), tomcat6 (>= 6.0.20)
+Conflicts: solr-jetty, solr-tomcat6
+Section: java
+Priority: extra
+Homepage: http://lucene.apache.org/solr/
+Description: enterprise search server based on Lucene - Tomcat integration
+ Solr is an open source enterprise search server based on the Lucene
+ Java search library, with XML/HTTP and JSON APIs, hit highlighting,
+ faceted search, caching, replication, and a web administration
+ interface. It runs in a Java servlet container such as Tomcat.
+ .
+ This package provides the Tomcat integration files for Solr.
