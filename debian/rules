@@ -6,30 +6,36 @@ include /usr/share/cdbs/1/class/ant.mk
 
 # Add here any variable or target overrides you need.
 
+VERSION = 4.0-dev
 JAVA_HOME := /usr/lib/jvm/java-6-openjdk
-DEB_ANT_CHECK_TARGET := test
+DEB_ANT_CHECK_TARGET := #test
+DEB_ANT_BUILD_TARGET = compile
+DEB_JARS = ant-junit
+ANT_OPTS += -Dant.library.dir=/usr/share/ant/lib
+DEB_ANT_INVOKE := $(subst ant.Main,ant.launch.Launcher,$(DEB_ANT_INVOKE))
+ANT = $(DEB_ANT_INVOKE)
 
 build/liblucene4-java::
-	cd lucene && ant jar
+	cd lucene && $(ANT) jar build-contrib
 
 install/liblucene4-java::
 	install -m 0755 -d $(DEB_DESTDIR)/usr/share/java
-	install -m 0644 $(shell find $(CURDIR)/lucene/build -name *.jar \
-                            -not -name \*javadoc\*) \
+	install -m 0644 $(wildcard $(CURDIR)/lucene/build/*.jar) \
+        $(wildcard $(CURDIR)/lucene/build/contrib/*/*.jar) \
         $(DEB_DESTDIR)/usr/share/java
 
-build/liblucene2-java-doc::
-	cd lucene && ant javadocs-all
+build/liblucene4-java-doc::
+	cd lucene && $(ANT) javadocs-all
 
-install/liblucene2-java-doc::
+install/liblucene4-java-doc::
 	install -m 0755 -d $(DEB_DESTDIR)/usr/share/java
 	install -m 0755 -d $(DEB_DESTDIR)/usr/share/doc/$(cdbs_curpkg)
 	cp -R lucene/build/docs/* $(DEB_DESTDIR)/usr/share/doc/$(cdbs_curpkg)
-	install -m 0644 $(shell find $(CURDIR)/lucene/build -name \*javadoc.jar) \
+	install -m 0644 $(wildcard find $(CURDIR)/lucene/build -name *javadoc.jar) \
         $(DEB_DESTDIR)/usr/share/java
 
 build/solr-common::
-	cd solr && ant dist
+	cd solr && $(ANT) dist
 
 install/solr-common::
 	install -m 0755 -d $(DEB_DESTDIR)/usr/share/java
@@ -37,7 +43,7 @@ install/solr-common::
 	install -m 0644 $(CURDIR)/solr/dist/*.war $(DEB_DESTDIR)/usr/share/java
 
 build/solr-doc::
-	cd solr && ant javadocs-all
+	cd solr && $(ANT) javadocs-all
 
 install/solr-doc::
 	install -m 0755 -d $(DEB_DESTDIR)/usr/share/doc/$(cdbs_curpkg)
