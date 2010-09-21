@@ -44,6 +44,7 @@ Build-Depends-Indep:
 Package: liblucene4-java
 Architecture: all
 Depends: ${shlibs:Depends}, ${misc:Depends}
+Conflicts: liblucene2-java
 Description: Full-text search engine library for Java(TM)
  Lucene is a full-text search engine for the Java(TM) programming
  language. Lucene is not a complete application, but rather a code
