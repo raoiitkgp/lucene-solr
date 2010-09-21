@@ -18,39 +18,43 @@ ANT = $(DEB_ANT_INVOKE)
 build/liblucene4-java::
 	cd lucene && $(ANT) jar build-contrib
 
-# install/liblucene4-java::
-# 	install -m 0755 -d $(DEB_DESTDIR)/usr/share/java \
-#                        $(DEB_DESTDIR)/usr/bin
-# 	install lucene/contrib/lucli/run.sh \
-#         $(DEB_DESTDIR)/usr/bin/lucli
-# 	install -m 0644 $(wildcard $(CURDIR)/lucene/build/*.jar) \
-#         $(wildcard $(CURDIR)/lucene/build/contrib/*/*.jar) \
-#         $(DEB_DESTDIR)/usr/share/java
+install/liblucene4-java::
+	install -m 0755 -d $(DEB_DESTDIR)/usr/bin $(DEB_DESTDIR)/usr/share/java
+	install lucene/contrib/lucli/run.sh $(DEB_DESTDIR)/usr/bin/lucli
+	install -m 0644 $(wildcard $(CURDIR)/lucene/build/*.jar) \
+        $(wildcard $(CURDIR)/lucene/build/contrib/*/*.jar) \
+        $(DEB_DESTDIR)/usr/share/java
 
 build/liblucene4-java-doc::
 	cd lucene && $(ANT) javadocs-all
 
-# install/liblucene4-java-doc::
-# 	install -m 0755 -d $(DEB_DESTDIR)/usr/share/java
-# 	install -m 0755 -d $(DEB_DESTDIR)/usr/share/doc/$(cdbs_curpkg)
-# 	cp -R lucene/build/docs/* $(DEB_DESTDIR)/usr/share/doc/$(cdbs_curpkg)
-# 	install -m 0644 $(wildcard find $(CURDIR)/lucene/build -name *javadoc.jar) \
-#         $(DEB_DESTDIR)/usr/share/java
+install/liblucene4-java-doc::
+	install -m 0755 -d $(DEB_DESTDIR)/usr/share/java
+	install -m 0755 -d $(DEB_DESTDIR)/usr/share/doc/$(cdbs_curpkg)
+	cp -R lucene/build/docs/* $(DEB_DESTDIR)/usr/share/doc/$(cdbs_curpkg)
+	install -m 0644 $(wildcard find $(CURDIR)/lucene/build -name *javadoc.jar) \
+        $(DEB_DESTDIR)/usr/share/java
 
 build/solr-common::
 	cd solr && $(ANT) dist
 
-# install/solr-common::
-# 	install -m 0755 -d $(DEB_DESTDIR)/usr/share/java
-# 	install -m 0644 $(CURDIR)/solr/dist/*.jar $(DEB_DESTDIR)/usr/share/java
-# 	install -m 0644 $(CURDIR)/solr/dist/*.war $(DEB_DESTDIR)/usr/share/java
+install/solr-common::
+	install -m 0755 -d $(DEB_DESTDIR)/etc/solr $(DEB_DESTDIR)/usr/share/solr
+	install -m 0644 solr/src/webapp/web/WEB-INF/web.xml $(DEB_DESTDIR)/etc/solr/
+	cp -R solr/src/scripts $(DEB_DESTDIR)/usr/share/solr
+	cp -R solr/example/solr/conf $(DEB_DESTDIR)/etc/solr
+	install -m 0644 $(wildcard solr/dist/*.jar) \
+        $(DEB_DESTDIR)/usr/share/solr/WEB-INF/lib/
+	cp -R solr/src/webapp/web/* $(DEB_DESTDIR)/usr/share/solr/
+	cp -R solr/build/web/* $(DEB_DESTDIR)/usr/share/solr/
+
 
 build/solr-doc::
 	cd solr && $(ANT) javadocs-all
 
-# install/solr-doc::
-# 	install -m 0755 -d $(DEB_DESTDIR)/usr/share/doc/$(cdbs_curpkg)
-# 	install -m 0755 -d $(DEB_DESTDIR)/usr/share/java
-# 	cp -R solr/build/docs/* $(DEB_DESTDIR)/usr/share/doc/$(cdbs_curpkg)
-# 	install -m 0644 $(shell find $(CURDIR)/solr/build -name \*javadoc.jar) \
-#         $(DEB_DESTDIR)/usr/share/java
+install/solr-doc::
+	install -m 0755 -d $(DEB_DESTDIR)/usr/share/doc/$(cdbs_curpkg)
+	install -m 0755 -d $(DEB_DESTDIR)/usr/share/java
+	cp -R solr/build/docs/* $(DEB_DESTDIR)/usr/share/doc/$(cdbs_curpkg)
+	install -m 0644 $(shell find $(CURDIR)/solr/build -name \*javadoc.jar) \
+        $(DEB_DESTDIR)/usr/share/java

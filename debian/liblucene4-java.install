@@ -1,3 +1,2 @@
-lucene/build/*.jar /usr/share/java
-lucene/build/contrib/*/*.jar /usr/share/java
-lucene/contrib/lucli/run.sh /usr/bin/lucli
+/usr/share/java/lucene*.jar
+/usr/bin/lucli
