@@ -6,11 +6,12 @@ include /usr/share/cdbs/1/class/ant.mk
 
 # Add here any variable or target overrides you need.
 
+ARTIFACTS ?= .
 VERSION = 4.0-dev
 JAVA_HOME := /usr/lib/jvm/java-6-openjdk
-DEB_ANT_CHECK_TARGET := #test
-DEB_ANT_BUILD_TARGET = compile
-DEB_JARS = ant-junit
+DEB_ANT_CHECK_TARGET := test
+DEB_ANT_BUILD_TARGET := compile
+DEB_JARS := ant-junit
 ANT_OPTS += -Dant.library.dir=/usr/share/ant/lib
 DEB_ANT_INVOKE := $(subst ant.Main,ant.launch.Launcher,$(DEB_ANT_INVOKE))
 ANT = $(DEB_ANT_INVOKE)
@@ -19,6 +20,9 @@ build/liblucene4-java::
 	cd lucene && $(ANT) jar build-contrib
 
 install/liblucene4-java::
+	mkdir -p $(ARTIFACTS)/tests
+	cp -R lucene/build/test $(ARTIFACTS)/tests/lucene
+
 	install -m 0755 -d $(DEB_DESTDIR)/usr/bin $(DEB_DESTDIR)/usr/share/java
 	install lucene/contrib/lucli/run.sh $(DEB_DESTDIR)/usr/bin/lucli
 	install -m 0644 $(wildcard $(CURDIR)/lucene/build/*.jar) \
