@@ -7,7 +7,7 @@ Homepage: http://lucene.apache.org/solr/
 Vcs-Browser: http://github.com/simplegeo/lucene-solr/
 Vcs-Git: git://github.com/simplegeo/lucene-solr.git
 Standards-Version: 3.9.0
-Build-Depends: openjdk-6-jdk
+Build-Depends: openjdk-6-jdk, zip
 Build-Depends-Indep:
  ant (>= 1.7),
  ant-contrib,
@@ -81,6 +81,7 @@ Depends: ${misc:Depends},
  libslf4j-java (>= 1.5.10),
  libxml-commons-external-java (>= 1.3.04),
  glassfish-mail (>= 1:2ur2-b04),
+ libgeronimo-stax-1.0-spec-java
 Recommends: solr-tomcat (>= ${binary:Version}) | solr-jetty (>= ${binary:Version})
 Suggests: libmysql-java
 Description: enterprise search server based on Lucene - common files
