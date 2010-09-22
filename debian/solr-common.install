@@ -1,2 +1,3 @@
 /usr/share/solr
+/usr/share/java/apache-solr*
 /etc/solr
