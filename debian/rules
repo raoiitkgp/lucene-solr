@@ -9,7 +9,7 @@ include /usr/share/cdbs/1/class/ant.mk
 ARTIFACTS ?= .
 VERSION = 4.0-dev
 JAVA_HOME := /usr/lib/jvm/java-6-openjdk
-DEB_ANT_CHECK_TARGET := test
+DEB_ANT_CHECK_TARGET := #test
 DEB_ANT_BUILD_TARGET := compile
 DEB_JARS := ant-junit
 ANT_OPTS += -Dant.library.dir=/usr/share/ant/lib
