@@ -46,14 +46,11 @@ install/solr-common::
 	install -m 0755 -d $(DEB_DESTDIR)/etc/solr \
         $(DEB_DESTDIR)/usr/share/solr/WEB-INF/lib \
         $(DEB_DESTDIR)/usr/share/java
-	install -m 0644 solr/src/webapp/web/WEB-INF/web.xml \
-        $(DEB_DESTDIR)/etc/solr/
-	install -m 0644 solr/dist/*.jar solr/dist/*.war \
+	install -m 0644 $(wildcard solr/dist/*.jar) $(wildcard solr/dist/*.war) \
         $(DEB_DESTDIR)/usr/share/java
-	cp -R solr/src/scripts $(DEB_DESTDIR)/usr/share/solr
 	cp -R solr/example/solr/conf $(DEB_DESTDIR)/etc/solr
-	cp -R solr/src/webapp/web/* $(DEB_DESTDIR)/usr/share/solr/
-	cp -R solr/build/web/* $(DEB_DESTDIR)/usr/share/solr/
+	unzip -d $(DEB_DESTDIR)/usr/share/solr \
+        $(CURDIR)/solr/dist/apache-solr-$(VERSION).war
 
 build/solr-doc::
 	cd solr && $(ANT) javadoc-all
