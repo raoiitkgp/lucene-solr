@@ -1,3 +1,15 @@
+lucene-solr (4.0+20100920-1sg5) UNRELEASED; urgency=low
+
+  [ Ian Eure ]
+  * Update copyright.
+  * Temporarily disable tests.
+  * Update copyright.
+  * Fix build-dep.
+
+  [ SimpleGeo Nerds ]
+
+ -- SimpleGeo Nerds <nerds@simplegeo.com>  Wed, 22 Sep 2010 21:48:06 +0000
+
 lucene-solr (4.0+20100920-1sg0) unstable; urgency=low
 
   * Debianized.
