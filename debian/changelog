@@ -1,5 +1,5 @@
-lucene-solr (4.0+20100920-1) unstable; urgency=low
+lucene-solr (4.0+20100920-1sg0) unstable; urgency=low
 
-  * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
+  * Debianized.
 
- -- Ian Eure <ian@simplegeo.com>  Mon, 20 Sep 2010 17:51:35 -0700
+ -- Ian Eure <ian@simplegeo.com>  Wed, 22 Sep 2010 11:03:44 -0700
