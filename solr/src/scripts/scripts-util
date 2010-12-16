@@ -24,7 +24,7 @@ prog=${0##*/}
 OS=`uname`
 
 # source the config file if present
-confFile=${solr_root}/conf/scripts.conf
+confFile=/etc/solr/conf/scripts.conf
 if [[ -f $confFile ]]
 then
     . $confFile
@@ -100,13 +100,9 @@ function curlUrl
 function dataDir
 {
     # use default value for data_dir if not specified
-    # relative path starts at ${solr_root}
     if [[ -z ${data_dir} ]]
     then
-        data_dir=${solr_root}/data
-    elif [[ "`echo ${data_dir}|cut -c1`" != "/" ]]
-    then
-        data_dir=${solr_root}/${data_dir}
+        data_dir=/var/lib/solr/data
     fi
 }
 
@@ -133,9 +129,9 @@ function logExit
 }
 
 # create logs directory if not there
-if [[ ! -d ${solr_root}/logs ]]
+if [[ ! -d /var/log/solr ]]
 then
-    mkdir ${solr_root}/logs
+    mkdir /var/log/solr
 fi
 
 umask 002

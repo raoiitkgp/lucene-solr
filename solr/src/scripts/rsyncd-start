@@ -17,17 +17,14 @@
 #
 # Shell script to start rsyncd on master Solr server
 
-orig_dir=$(pwd)
-cd ${0%/*}/..
-solr_root=$(pwd)
-cd ${orig_dir}
+
 
 unset data_dir solr_port rsyncd_port user rsyncd_bwlimit verbose debug
-. ${solr_root}/bin/scripts-util
+. /usr/share/solr/scripts-util
 
 # set up variables
 prog=${0##*/}
-log=${solr_root}/logs/rsyncd.log
+log=/var/log/solr/rsyncd.log
 
 # define usage string
 USAGE="\
@@ -97,7 +94,7 @@ dataDir
 logMessage started by $oldwhoami
 logMessage command: $0 $@
 
-if [[ ! -f ${solr_root}/logs/rsyncd-enabled ]]
+if [[ ! -f /var/log/solr/rsyncd-enabled ]]
 then
     logMessage rsyncd disabled
     exit 2
@@ -111,25 +108,25 @@ then
 fi
 
 # create conf/rsyncd.conf on the fly, creating solrlogs directory if needed
-if [[ ! -d ${solr_root}/conf ]]
+if [[ ! -d /etc/solr/conf ]]
 then
-    mkdir ${solr_root}/conf
+    mkdir /etc/solr/conf
 fi
-cat <<EOF > ${solr_root}/conf/rsyncd.conf
+cat <<EOF > /etc/solr/conf/rsyncd.conf
 #### rsyncd.conf file ####
  
 uid = $(whoami)
 gid = $(whoami)
 use chroot = no
 list = no
-pid file = ${solr_root}/logs/rsyncd.pid
-log file = ${solr_root}/logs/rsyncd.log
+pid file = /var/log/solr/rsyncd.pid
+log file = /var/log/solr/rsyncd.log
 [solr]
     path = ${data_dir}
     comment = Solr
 EOF
 
-rsync --daemon --port=${rsyncd_port} --bwlimit=${rsyncd_bwlimit} --config=${solr_root}/conf/rsyncd.conf
+rsync --daemon --port=${rsyncd_port} --bwlimit=${rsyncd_bwlimit} --config=/etc/solr/conf/rsyncd.conf
 
 # first make sure rsyncd is accepting connections
 i=1

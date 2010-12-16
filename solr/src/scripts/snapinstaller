@@ -18,19 +18,16 @@
 # Shell script to install a snapshot into place as the Lucene collection
 # for a Solr server
 
-orig_dir=$(pwd)
-cd ${0%/*}/..
-solr_root=$(pwd)
-cd ${orig_dir}
+
 
 unset master_host master_status_dir data_dir user verbose debug
-. ${solr_root}/bin/scripts-util
+. /usr/share/solr/scripts-util
 
 # set up variables
 prog=${0##*/}
-log=${solr_root}/logs/${prog}.log
+log=/var/log/solr/${prog}.log
 
-LOCKDIR="${solr_root}/logs/snapinstaller-lock"
+LOCKDIR="/var/log/solr/snapinstaller-lock"
 PIDFILE="${LOCKDIR}/PID"
 
 
@@ -94,12 +91,6 @@ fixUser "$@"
 
 dataDir
 
-# assume relative path to start at ${solr_root}
-if [[ "`echo ${master_status_dir}|cut -c1`" != "/" ]]
-then
-    master_status_dir=${solr_root}/${master_status_dir}
-fi
-
 setStartTime
 
 if test -r $PIDFILE
@@ -135,7 +126,7 @@ fi
 name=${data_dir}/${name}
 
 # has snapshot already been installed
-if [[ ${name} == `cat ${solr_root}/logs/snapshot.current 2>/dev/null` ]]
+if [[ ${name} == `cat /var/log/solr/snapshot.current 2>/dev/null` ]]
 then
     logMessage latest snapshot ${name} already installed
     logExit ended 0
@@ -167,18 +158,18 @@ else
 fi
 
 # update distribution stats
-echo ${name} > ${solr_root}/logs/snapshot.current
+echo ${name} > /var/log/solr/snapshot.current
 
 # push stats/state to master
 if
-    ! scp -q -o StrictHostKeyChecking=no ${solr_root}/logs/snapshot.current ${master_host}:${master_status_dir}/snapshot.current.`uname -n`
+    ! scp -q -o StrictHostKeyChecking=no /var/log/solr/snapshot.current ${master_host}:${master_status_dir}/snapshot.current.`uname -n`
 then
     logMessage failed to ssh to master ${master_host}, snapshot status not updated on master
 fi
 
 # notify Solr to open a new Searcher
 logMessage notifing Solr to open a new Searcher
-${solr_root}/bin/commit
+/usr/bin/solr-commit
 if [[ $? != 0 ]]
 then
   logMessage failed to connect to Solr server

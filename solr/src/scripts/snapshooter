@@ -17,17 +17,14 @@
 #
 # Shell script to take a snapshot of a Solr Lucene collection.
 
-orig_dir=$(pwd)
-cd ${0%/*}/..
-solr_root=$(pwd)
-cd ${orig_dir}
+
 
 unset data_dir user verbose debug
-. ${solr_root}/bin/scripts-util
+. /usr/share/solr/scripts-util
 
 # set up variables
 prog=${0##*/}
-log=${solr_root}/logs/${prog}.log
+log=/var/log/solr/${prog}.log
 
 # define usage string
 USAGE="\

@@ -17,16 +17,13 @@
 #
 # Shell script to enable rsyncd
 
-orig_dir=$(pwd)
-cd ${0%/*}/..
-solr_root=$(pwd)
-cd ${orig_dir}
+
 
 unset user verbose debug
-. ${solr_root}/bin/scripts-util
+. /usr/share/solr/scripts-util
 
 # set up variables
-log=${solr_root}/logs/rsyncd.log
+log=/var/log/solr/rsyncd.log
 
 # define usage string
 USAGE="\
@@ -63,7 +60,7 @@ setStartTime
 
 logMessage enabled by $oldwhoami
 logMessage command: $0 $@
-name=${solr_root}/logs/rsyncd-enabled
+name=/var/log/solr/rsyncd-enabled
 
 if [[ -f ${name} ]]
 then

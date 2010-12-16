@@ -18,17 +18,14 @@
 # Shell script to make an Atomic Backup after Optimize of
 # a Solr Lucene collection.
 
-orig_dir=$(pwd)
-cd ${0%/*}/..
-solr_root=$(pwd)
-cd ${orig_dir}
+
 
 unset solr_hostname solr_port data_dir webapp_name user verbose debug solr_url
-. ${solr_root}/bin/scripts-util
+. /usr/share/solr/scripts-util
 
 # set up variables
 prog=${0##*/}
-log=${solr_root}/logs/${prog}.log
+log=/var/log/solr/${prog}.log
 
 # define usage string
 USAGE="\

@@ -18,17 +18,14 @@
 # Shell script to force a commit of all changes since last commit
 # for a Solr server
 
-orig_dir=$(pwd)
-cd ${0%/*}/..
-solr_root=$(pwd)
-cd ${orig_dir}
+
 
 unset solr_hostname solr_port webapp_name user verbose debug solr_url
-. ${solr_root}/bin/scripts-util
+. /usr/share/solr/scripts-util
 
 # set up variables
 prog=${0##*/}
-log=${solr_root}/logs/${prog}.log
+log=/var/log/solr/${prog}.log
 
 # define usage string
 USAGE="\
