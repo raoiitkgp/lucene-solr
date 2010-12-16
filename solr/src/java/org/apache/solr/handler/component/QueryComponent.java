@@ -22,12 +22,19 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.search.*;
 import org.apache.lucene.util.BytesRef;
+import org.apache.solr.cloud.CloudDescriptor;
+import org.apache.solr.cloud.ZkController;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.SolrException;
+import org.apache.solr.common.cloud.CloudState;
+import org.apache.solr.common.cloud.Slice;
+import org.apache.solr.common.cloud.ZkNodeProps;
+import org.apache.solr.common.cloud.ZkStateReader;
 import org.apache.solr.common.params.*;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.common.util.StrUtils;
+import org.apache.solr.core.CoreDescriptor;
 import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.response.SolrQueryResponse;
 import org.apache.solr.schema.FieldType;
@@ -96,7 +103,7 @@ public class QueryComponent extends SearchComponent
       if (fqs!=null && fqs.length!=0) {
         List<Query> filters = rb.getFilters();
         if (filters==null) {
-          filters = new ArrayList<Query>();
+          filters = new ArrayList<Query>(fqs.length);
           rb.setFilters( filters );
         }
         for (String fq : fqs) {
@@ -110,11 +117,116 @@ public class QueryComponent extends SearchComponent
       throw new SolrException(SolrException.ErrorCode.BAD_REQUEST, e);
     }
 
-    // TODO: temporary... this should go in a different component.
+    checkDistributed(rb);
+  }
+
+
+  // TODO: this could go in a different component, or in SearchHandler
+  // check if this is a distributed request and set info on the response builder
+  void checkDistributed(ResponseBuilder rb) {
+    SolrQueryRequest req = rb.req;
+    SolrParams params = req.getParams();
+
+    rb.isDistrib = params.getBool("distrib",false);
     String shards = params.get(ShardParams.SHARDS);
-    if (shards != null) {
-      List<String> lst = StrUtils.splitSmart(shards, ",", true);
-      rb.shards = lst.toArray(new String[lst.size()]);
+
+    // for back compat, a shards param with URLs like localhost:8983/solr will mean that this
+    // search is distributed.
+    boolean hasShardURL = shards != null && shards.indexOf('/') > 0;
+    rb.isDistrib = hasShardURL | rb.isDistrib;
+
+    if (rb.isDistrib) {
+      // since the cost of grabbing cloud state is still up in the air, we grab it only
+      // if we need it.
+      CloudState cloudState = null;
+      Map<String,Slice> slices = null;
+      CoreDescriptor coreDescriptor = req.getCore().getCoreDescriptor();
+      CloudDescriptor cloudDescriptor = coreDescriptor.getCloudDescriptor();
+      ZkController zkController = coreDescriptor.getCoreContainer().getZkController();
+
+
+      if (shards != null) {
+        List<String> lst = StrUtils.splitSmart(shards, ",", true);
+        rb.shards = lst.toArray(new String[lst.size()]);
+        rb.slices = new String[rb.shards.length];
+
+        if (zkController != null) {
+          // figure out which shards are slices
+          for (int i=0; i<rb.shards.length; i++) {
+            if (rb.shards[i].indexOf('/') < 0) {
+              // this is a logical shard
+              rb.slices[i] = rb.shards[i];
+              rb.shards[i] = null;
+            }
+          }
+        }
+      } else if (zkController != null) {
+        // we weren't provided with a list of slices to query, so find the list that will cover the complete index
+
+        cloudState =  zkController.getCloudState();
+
+        // TODO: check "collection" for which collection(s) to search.. but for now, just default
+        // to the collection for this core.
+        // This can be more efficient... we only record the name, even though we have the
+        // shard info we need in the next step of mapping slice->shards
+        slices = cloudState.getSlices(cloudDescriptor.getCollectionName());
+        rb.slices = slices.keySet().toArray(new String[slices.size()]);
+        rb.shards = new String[rb.slices.length];
+        
+        /***
+         rb.slices = new String[slices.size()];
+         for (int i=0; i<rb.slices.length; i++) {
+         rb.slices[i] = slices.get(i).getName();
+         }
+         ***/
+      }
+
+      //
+      // Map slices to shards
+      //
+      if (zkController != null) {
+        for (int i=0; i<rb.shards.length; i++) {
+          if (rb.shards[i] == null) {
+            if (cloudState == null) {
+              cloudState =  zkController.getCloudState();
+              slices = cloudState.getSlices(cloudDescriptor.getCollectionName());
+            }
+            String sliceName = rb.slices[i];
+
+            Slice slice = slices.get(sliceName);
+
+            if (slice==null) {
+              // Treat this the same as "all servers down" for a slice, and let things continue
+              // if partial results are acceptable
+              rb.shards[i] = "";
+              continue;
+              // throw new SolrException(SolrException.ErrorCode.BAD_REQUEST, "no such shard: " + sliceName);
+            }
+
+            Map<String, ZkNodeProps> sliceShards = slice.getShards();
+
+            // For now, recreate the | delimited list of equivalent servers
+            Set<String> liveNodes = cloudState.getLiveNodes();
+            StringBuilder sliceShardsStr = new StringBuilder();
+            boolean first = true;
+            for (ZkNodeProps nodeProps : sliceShards.values()) {
+              if (!liveNodes.contains(nodeProps.get(ZkStateReader.NODE_NAME)))
+                continue;
+              if (first) {
+                first = false;
+              } else {
+                sliceShardsStr.append('|');
+              }
+              String url = nodeProps.get("url");
+              if (url.startsWith("http://"))
+                url = url.substring(7);
+              sliceShardsStr.append(url);
+            }
+
+            rb.shards[i] = sliceShardsStr.toString();
+          }
+        }
+      }
     }
     String shards_rows = params.get(ShardParams.SHARDS_ROWS);
     if(shards_rows != null) {
@@ -188,15 +300,21 @@ public class QueryComponent extends SearchComponent
     boolean doGroup = params.getBool(GroupParams.GROUP, false);
     if (doGroup) {
       try {
-        cmd.groupCommands = new ArrayList<Grouping.Command>();
-        
+        Grouping grouping = new Grouping(searcher, result, cmd);
+
         String[] fields = params.getParams(GroupParams.GROUP_FIELD);
         String[] funcs = params.getParams(GroupParams.GROUP_FUNC);
         String[] queries = params.getParams(GroupParams.GROUP_QUERY);
         String groupSortStr = params.get(GroupParams.GROUP_SORT);
-        Sort groupSort = groupSortStr != null ? QueryParsing.parseSort(groupSortStr, req.getSchema()) : null;
+        boolean main = params.getBool(GroupParams.GROUP_MAIN, false);
+        String format = params.get(GroupParams.GROUP_FORMAT);
+        Grouping.Format defaultFormat = "simple".equals(format) ? Grouping.Format.Simple : Grouping.Format.Grouped; 
+
+        // groupSort defaults to sort
+        Sort groupSort = groupSortStr == null ? cmd.getSort() : QueryParsing.parseSort(groupSortStr, req);
 
         int limitDefault = cmd.getLen(); // this is normally from "rows"
+        int groupOffsetDefault = params.getInt(GroupParams.GROUP_OFFSET, 0);
         int docsPerGroupDefault = params.getInt(GroupParams.GROUP_LIMIT, 1);
 
         // temporary: implement all group-by-field as group-by-func
@@ -215,7 +333,7 @@ public class QueryComponent extends SearchComponent
           for (String groupByStr : funcs) {
             QParser parser = QParser.getParser(groupByStr, "func", rb.req);
             Query q = parser.getQuery();
-            Grouping.CommandFunc gc = new Grouping.CommandFunc();
+            Grouping.CommandFunc gc = grouping.new CommandFunc();
             gc.groupSort = groupSort;
 
             if (q instanceof FunctionQuery) {
@@ -224,29 +342,78 @@ public class QueryComponent extends SearchComponent
               gc.groupBy = new QueryValueSource(q, 0.0f);
             }
             gc.key = groupByStr;
-            gc.groupLimit = limitDefault;
+            gc.numGroups = limitDefault;
             gc.docsPerGroup = docsPerGroupDefault;
+            gc.groupOffset = groupOffsetDefault;
+            gc.offset = cmd.getOffset();
+            gc.sort = cmd.getSort();
+            gc.format = defaultFormat;
 
-            cmd.groupCommands.add(gc);
+            if (main) {
+              gc.main = true;
+              gc.format = Grouping.Format.Simple;
+              main = false;
+            }
+
+            if (gc.format == Grouping.Format.Simple) {
+              gc.groupOffset = 0;  // doesn't make sense
+            }
+
+            grouping.add(gc);
+          }
+        }
+
+        if (queries != null) {
+          for (String groupByStr : queries) {
+            QParser parser = QParser.getParser(groupByStr, null, rb.req);
+            Query gq = parser.getQuery();
+            Grouping.CommandQuery gc = grouping.new CommandQuery();
+            gc.query = gq;
+            gc.groupSort = groupSort;
+            gc.key = groupByStr;
+            gc.numGroups = limitDefault;
+            gc.docsPerGroup = docsPerGroupDefault;
+            gc.groupOffset = groupOffsetDefault;
+
+            // these two params will only be used if this is for the main result set
+            gc.offset = cmd.getOffset();
+            gc.numGroups = limitDefault;
+
+            gc.format = defaultFormat;            
+
+            if (main) {
+              gc.main = true;
+              gc.format = Grouping.Format.Simple;
+              main = false;
+            }
+            if (gc.format == Grouping.Format.Simple) {
+              gc.docsPerGroup = gc.numGroups;  // doesn't make sense to limit to one
+              gc.groupOffset = gc.offset;
+            }
+
+            grouping.add(gc);
           }
         }
 
 
-        if (cmd.groupCommands.size() == 0)
-          cmd.groupCommands = null;
-
-        if (cmd.groupCommands != null) {
-          if (rb.doHighlights || rb.isDebug()) {
-            // we need a single list of the returned docs
-            cmd.setFlags(SolrIndexSearcher.GET_DOCLIST);
-          }
-
-          searcher.search(result,cmd);
-          rb.setResult( result );
-          rsp.add("grouped", result.groupedResults);
-          // TODO: get "hits" a different way to log
-          return;
+        if (rb.doHighlights || rb.isDebug()) {
+          // we need a single list of the returned docs
+          cmd.setFlags(SolrIndexSearcher.GET_DOCLIST);
         }
+
+        // searcher.search(result,cmd);
+        grouping.execute();
+        rb.setResult( result );
+        rsp.add("grouped", result.groupedResults);
+        // TODO: get "hits" a different way to log
+
+        if (grouping.mainResult != null) {
+          rsp.add("response",grouping.mainResult);
+          rsp.getToLog().add("hits", grouping.mainResult.matches());
+        }
+
+        return;
+
       } catch (ParseException e) {
         throw new SolrException(SolrException.ErrorCode.BAD_REQUEST, e);
       }

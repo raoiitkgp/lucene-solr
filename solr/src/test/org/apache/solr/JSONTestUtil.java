@@ -23,14 +23,16 @@ import org.apache.solr.common.util.StrUtils;
 
 import java.io.StringReader;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 public class JSONTestUtil {
 
   public static String match(String input, String pathAndExpected) throws Exception {
-    int pos = pathAndExpected.indexOf(':');
+    int pos = pathAndExpected.indexOf("==");
     String path = pos>=0 ? pathAndExpected.substring(0,pos) : null;
-    String expected = pos>=0 ? pathAndExpected.substring(pos+1) : pathAndExpected;
+    String expected = pos>=0 ? pathAndExpected.substring(pos+2) : pathAndExpected;
     return match(path, input, expected);
   }
 
@@ -51,10 +53,12 @@ public class JSONTestUtil {
   
   public static String matchObj(String path, Object input, Object expected) throws Exception {
     CollectionTester tester = new CollectionTester(input);
-    if (!tester.seek(path)) {
+    boolean reversed = path.startsWith("!");
+    String positivePath = reversed ? path.substring(1) : path;
+    if (!tester.seek(positivePath) ^ reversed) {
       return "Path not found: " + path;
     }
-    if (expected != null && !tester.match(expected)) {
+    if (expected != null && (!tester.match(expected) ^ reversed)) {
       return tester.err + " @ " + tester.getPath();
     }
     return null;
@@ -117,8 +121,12 @@ class CollectionTester {
   }
 
   boolean match() {
-    if (expected == null && val == null) {
+    if (expected == val) {
       return true;
+    }
+    if (expected == null || val == null) {
+      setErr("mismatch: '" + expected + "'!='" + val + "'");
+      return false;
     }
     if (expected instanceof List) {
       return matchList();
@@ -129,8 +137,20 @@ class CollectionTester {
 
     // generic fallback
     if (!expected.equals(val)) {
-      setErr("mismatch: '" + expected + "'!='" + val + "'");
-      return false;
+
+      // make an exception for some numerics
+      if (expected instanceof Integer && val instanceof Long || expected instanceof Long && val instanceof Integer
+          && ((Number)expected).longValue() == ((Number)val).longValue())
+      {
+        // OK
+      } else if (expected instanceof Float && val instanceof Double || expected instanceof Double && val instanceof Float
+          && ((Number)expected).doubleValue() == ((Number)val).doubleValue())
+      {
+        // OK
+      } else {
+        setErr("mismatch: '" + expected + "'!='" + val + "'");
+        return false;
+      }
     }
 
     // setErr("unknown expected type " + expected.getClass().getName());

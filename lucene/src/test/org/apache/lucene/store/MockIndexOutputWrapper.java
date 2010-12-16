@@ -19,6 +19,8 @@ package org.apache.lucene.store;
 
 import java.io.IOException;
 
+import org.apache.lucene.util.LuceneTestCase;
+
 /**
  * Used by MockRAMDirectory to create an output stream that
  * will throw an IOException on fake disk full, track max
@@ -30,7 +32,7 @@ public class MockIndexOutputWrapper extends IndexOutput {
   private MockDirectoryWrapper dir;
   private final IndexOutput delegate;
   private boolean first=true;
-  private final String name;
+  final String name;
   
   byte[] singleByte = new byte[1];
 
@@ -53,7 +55,10 @@ public class MockIndexOutputWrapper extends IndexOutput {
         dir.maxUsedSize = size;
       }
     }
-    dir.files.remove(this);
+    synchronized(dir) {
+      dir.openFileHandles.remove(this);
+      dir.openFilesForWrite.remove(name);
+    }
   }
 
   @Override
@@ -87,16 +92,32 @@ public class MockIndexOutputWrapper extends IndexOutput {
     }
 
     if (dir.maxSize != 0 && freeSpace <= len) {
-      if (freeSpace > 0 && freeSpace < len) {
+      if (freeSpace > 0) {
         realUsage += freeSpace;
         delegate.writeBytes(b, offset, (int) freeSpace);
       }
       if (realUsage > dir.maxUsedSize) {
         dir.maxUsedSize = realUsage;
       }
-      throw new IOException("fake disk full at " + dir.getRecomputedActualSizeInBytes() + " bytes when writing " + name);
+      String message = "fake disk full at " + dir.getRecomputedActualSizeInBytes() + " bytes when writing " + name + " (file length=" + delegate.length();
+      if (freeSpace > 0) {
+        message += "; wrote " + freeSpace + " of " + len + " bytes";
+      }
+      message += ")";
+      if (LuceneTestCase.VERBOSE) {
+        System.out.println(Thread.currentThread().getName() + ": MDW: now throw fake disk full");
+        new Throwable().printStackTrace(System.out);
+      }
+      throw new IOException(message);
     } else {
-      delegate.writeBytes(b, offset, len);
+      if (dir.randomState.nextBoolean()) {
+        final int half = len/2;
+        delegate.writeBytes(b, offset, half);
+        Thread.yield();
+        delegate.writeBytes(b, offset+half, len-half);
+      } else {
+        delegate.writeBytes(b, offset, len);
+      }
     }
 
     dir.maybeThrowDeterministicException();

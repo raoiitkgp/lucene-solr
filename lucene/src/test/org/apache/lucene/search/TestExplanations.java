@@ -98,7 +98,7 @@ public class TestExplanations extends LuceneTestCase {
   
   /** check the expDocNrs first, then check the query (and the explanations) */
   public void qtest(Query q, int[] expDocNrs) throws Exception {
-    CheckHits.checkHitCollector(q, FIELD, searcher, expDocNrs);
+    CheckHits.checkHitCollector(random, q, FIELD, searcher, expDocNrs);
   }
 
   /**
@@ -165,7 +165,7 @@ public class TestExplanations extends LuceneTestCase {
   }
   /** MACRO for SpanOrQuery containing two SpanQueries */
   public SpanOrQuery sor(SpanQuery s, SpanQuery e) {
-    return new SpanOrQuery(new SpanQuery[] { s, e });
+    return new SpanOrQuery(s, e);
   }
   
   /** MACRO for SpanOrQuery containing three SpanTerm queries */
@@ -174,7 +174,7 @@ public class TestExplanations extends LuceneTestCase {
   }
   /** MACRO for SpanOrQuery containing two SpanQueries */
   public SpanOrQuery sor(SpanQuery s, SpanQuery m, SpanQuery e) {
-    return new SpanOrQuery(new SpanQuery[] { s, m, e });
+    return new SpanOrQuery(s, m, e);
   }
   
   /** MACRO for SpanNearQuery containing two SpanTerm queries */

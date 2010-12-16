@@ -24,6 +24,7 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.DocsEnum;
 import org.apache.lucene.index.DocsAndPositionsEnum;
+import org.apache.lucene.util.ArrayUtil;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.ToStringUtils;
 import org.apache.lucene.util.PriorityQueue;
@@ -213,7 +214,7 @@ public class MultiPhraseQuery extends Query {
 
       // sort by increasing docFreq order
       if (slop == 0) {
-        Arrays.sort(postingsFreqs);
+        ArrayUtil.quickSort(postingsFreqs);
       }
 
       if (slop == 0) {
@@ -262,7 +263,7 @@ public class MultiPhraseQuery extends Query {
       fieldExpl.setDescription("fieldWeight("+getQuery()+" in "+doc+
                                "), product of:");
 
-      Scorer scorer = (Scorer) scorer(reader, true, false);
+      Scorer scorer = scorer(reader, true, false);
       if (scorer == null) {
         return new Explanation(0.0f, "no matching docs");
       }
@@ -430,7 +431,7 @@ class UnionDocsAndPositionsEnum extends DocsAndPositionsEnum {
 
       Iterator<DocsAndPositionsEnum> i = docsEnums.iterator();
       while (i.hasNext()) {
-        DocsAndPositionsEnum postings = (DocsAndPositionsEnum) i.next();
+        DocsAndPositionsEnum postings = i.next();
         if (postings.nextDoc() != DocsAndPositionsEnum.NO_MORE_DOCS) {
           add(postings);
         }

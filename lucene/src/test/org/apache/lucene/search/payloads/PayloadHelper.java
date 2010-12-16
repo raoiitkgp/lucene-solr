@@ -37,6 +37,7 @@ import static org.apache.lucene.util.LuceneTestCase.TEST_VERSION_CURRENT;
 
 import java.io.Reader;
 import java.io.IOException;
+import java.util.Random;
 
 /**
  *
@@ -111,8 +112,8 @@ public class PayloadHelper {
    * @throws IOException
    */
   // TODO: randomize
-  public IndexSearcher setUp(Similarity similarity, int numDocs) throws IOException {
-    Directory directory = new MockDirectoryWrapper(new RAMDirectory());
+  public IndexSearcher setUp(Random random, Similarity similarity, int numDocs) throws IOException {
+    Directory directory = new MockDirectoryWrapper(random, new RAMDirectory());
     PayloadAnalyzer analyzer = new PayloadAnalyzer();
 
     // TODO randomize this
@@ -126,10 +127,10 @@ public class PayloadHelper {
       doc.add(new Field(NO_PAYLOAD_FIELD, English.intToEnglish(i), Field.Store.YES, Field.Index.ANALYZED));
       writer.addDocument(doc);
     }
-    reader = writer.getReader();
+    reader = new SlowMultiReaderWrapper(IndexReader.open(writer));
     writer.close();
 
-    IndexSearcher searcher = new IndexSearcher(SlowMultiReaderWrapper.wrap(reader));
+    IndexSearcher searcher = new IndexSearcher(reader);
     searcher.setSimilarity(similarity);
     return searcher;
   }

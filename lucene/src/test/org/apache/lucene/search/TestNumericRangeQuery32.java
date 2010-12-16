@@ -17,15 +17,15 @@ package org.apache.lucene.search;
  * limitations under the License.
  */
 
-import java.util.Random;
-
 import org.apache.lucene.analysis.MockAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.NumericField;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.MultiFields;
 import org.apache.lucene.index.RandomIndexWriter;
+import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.util.BytesRef;
@@ -49,14 +49,12 @@ public class TestNumericRangeQuery32 extends LuceneTestCase {
   private static Directory directory = null;
   private static IndexReader reader = null;
   private static IndexSearcher searcher = null;
-  private static Random random = null;
   
   @BeforeClass
   public static void beforeClass() throws Exception {
-    random = newStaticRandom(TestNumericRangeQuery32.class);
-    directory = newDirectory(random);
+    directory = newDirectory();
     RandomIndexWriter writer = new RandomIndexWriter(random, directory,
-        newIndexWriterConfig(random, TEST_VERSION_CURRENT, new MockAnalyzer())
+        newIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer())
         .setMaxBufferedDocs(_TestUtil.nextInt(random, 50, 1000)));
     
     NumericField
@@ -567,7 +565,8 @@ public class TestNumericRangeQuery32 extends LuceneTestCase {
   private void testEnum(int lower, int upper) throws Exception {
     NumericRangeQuery<Integer> q = NumericRangeQuery.newIntRange("field4", 4,
         lower, upper, true, true);
-    TermsEnum termEnum = q.getTermsEnum(searcher.getIndexReader());
+    Terms terms = MultiFields.getTerms(searcher.getIndexReader(), "field4");
+    TermsEnum termEnum = q.getTermsEnum(terms);
     int count = 0;
     while (termEnum.next() != null) {
       final BytesRef t = termEnum.term();

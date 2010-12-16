@@ -17,13 +17,11 @@ package org.apache.lucene.index;
  * limitations under the License.
  */
 
-import java.util.HashSet;
-import java.util.Collection;
 import java.io.PrintStream;
+import java.util.Collection;
+import java.util.HashSet;
 
 import org.apache.lucene.store.Directory;
-import org.apache.lucene.index.codecs.Codec;
-import org.apache.lucene.index.codecs.CodecProvider;
 
 /**
  * @lucene.experimental
@@ -36,10 +34,11 @@ public class SegmentWriteState {
   public final String docStoreSegmentName;
   public final int numDocs;
   public int numDocsInStore;
+  public boolean hasVectors;
   public final Collection<String> flushedFiles;
 
-  // Actual codec used
-  final Codec codec;
+  final SegmentCodecs segmentCodecs;
+  public final String codecId;
 
   /** Expert: The fraction of terms in the "dictionary" which should be stored
    * in RAM.  Smaller values use more memory, but make searching slightly
@@ -59,11 +58,12 @@ public class SegmentWriteState {
    * slightly smaller indexes, but slower skipping in big posting lists.
    */
   public final int maxSkipLevels = 10;
+  
+
 
   public SegmentWriteState(PrintStream infoStream, Directory directory, String segmentName, FieldInfos fieldInfos,
                            String docStoreSegmentName, int numDocs,
-                           int numDocsInStore, int termIndexInterval,
-                           CodecProvider codecs) {
+                           int numDocsInStore, int termIndexInterval, SegmentCodecs segmentCodecs) {
     this.infoStream = infoStream;
     this.directory = directory;
     this.segmentName = segmentName;
@@ -72,7 +72,25 @@ public class SegmentWriteState {
     this.numDocs = numDocs;
     this.numDocsInStore = numDocsInStore;
     this.termIndexInterval = termIndexInterval;
-    this.codec = codecs.getWriter(this);
+    this.segmentCodecs = segmentCodecs;
     flushedFiles = new HashSet<String>();
+    codecId = "";
+  }
+  
+  /**
+   * Create a shallow {@link SegmentWriteState} copy final a codec ID
+   */
+  SegmentWriteState(SegmentWriteState state, String codecId) {
+    infoStream = state.infoStream;
+    directory = state.directory;
+    segmentName = state.segmentName;
+    fieldInfos = state.fieldInfos;
+    docStoreSegmentName = state.docStoreSegmentName;
+    numDocs = state.numDocs;
+    numDocsInStore = state.numDocsInStore;
+    termIndexInterval = state.termIndexInterval;
+    segmentCodecs = state.segmentCodecs;
+    flushedFiles = state.flushedFiles;
+    this.codecId = codecId;
   }
 }

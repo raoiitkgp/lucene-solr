@@ -41,9 +41,19 @@ import org.apache.lucene.queryParser.ParseException;
  * @version $Id$
  * @since solr 1.3
  */
-public class  FacetComponent extends SearchComponent
+public class FacetComponent extends SearchComponent
 {
   public static final String COMPONENT_NAME = "facet";
+
+  static final String PIVOT_KEY = "facet_pivot";
+
+  PivotFacetHelper pivotHelper;
+
+  @Override
+  public void init( NamedList args )
+  {
+    pivotHelper = new PivotFacetHelper(); // Maybe this would configurable?
+  }
 
   @Override
   public void prepare(ResponseBuilder rb) throws IOException
@@ -68,8 +78,17 @@ public class  FacetComponent extends SearchComponent
               params,
               rb );
 
+      NamedList counts = f.getFacetCounts();
+      String[] pivots = params.getParams( FacetParams.FACET_PIVOT );
+      if( pivots != null && pivots.length > 0 ) {
+        NamedList v = pivotHelper.process(rb, params, pivots);
+        if( v != null ) {
+          counts.add( PIVOT_KEY, v );
+        }
+      }
+      
       // TODO ???? add this directly to the response, or to the builder?
-      rb.rsp.add( "facet_counts", f.getFacetCounts() );
+      rb.rsp.add( "facet_counts", counts );
     }
   }
 
@@ -251,7 +270,7 @@ public class  FacetComponent extends SearchComponent
       NamedList facet_queries = (NamedList)facet_counts.get("facet_queries");
       if (facet_queries != null) {
         for (int i=0; i<facet_queries.size(); i++) {
-          String returnedKey = (String)facet_queries.getName(i);
+          String returnedKey = facet_queries.getName(i);
           long count = ((Number)facet_queries.getVal(i)).longValue();
           QueryFacet qf = fi.queryFacets.get(returnedKey);
           qf.count += count;
@@ -341,7 +360,7 @@ public class  FacetComponent extends SearchComponent
 
       for (int i=0; i<facet_fields.size(); i++) {
         String key = facet_fields.getName(i);
-        DistribFieldFacet dff = (DistribFieldFacet)fi.facets.get(key);
+        DistribFieldFacet dff = fi.facets.get(key);
         if (dff == null) continue;
 
         NamedList shardCounts = (NamedList)facet_fields.getVal(i);

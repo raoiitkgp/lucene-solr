@@ -37,6 +37,7 @@ final class TermVectorsTermsWriter extends TermsHashConsumer {
   IndexOutput tvd;
   IndexOutput tvf;
   int lastDocID;
+  boolean hasVectors;
 
   public TermVectorsTermsWriter(DocumentsWriter docWriter) {
     this.docWriter = docWriter;
@@ -49,6 +50,15 @@ final class TermVectorsTermsWriter extends TermsHashConsumer {
 
   @Override
   synchronized void flush(Map<TermsHashConsumerPerThread,Collection<TermsHashConsumerPerField>> threadsAndFields, final SegmentWriteState state) throws IOException {
+
+    // NOTE: it's possible that all documents seen in this segment
+    // hit non-aborting exceptions, in which case we will
+    // not have yet init'd the TermVectorsWriter.  This is
+    // actually OK (unlike in the stored fields case)
+    // because, although FieldInfos.hasVectors() will return
+    // true, the TermVectorsReader gracefully handles
+    // non-existence of the term vectors files.
+    state.hasVectors = hasVectors;
 
     if (tvx != null) {
 
@@ -100,6 +110,8 @@ final class TermVectorsTermsWriter extends TermsHashConsumer {
       docWriter.removeOpenFile(docName);
 
       lastDocID = 0;
+      state.hasVectors = hasVectors;
+      hasVectors = false;
     }    
   }
 
@@ -138,7 +150,7 @@ final class TermVectorsTermsWriter extends TermsHashConsumer {
 
   synchronized void initTermVectorsWriter() throws IOException {        
     if (tvx == null) {
-      
+
       final String docStoreSegment = docWriter.getDocStoreSegment();
 
       if (docStoreSegment == null)
@@ -151,6 +163,7 @@ final class TermVectorsTermsWriter extends TermsHashConsumer {
       String idxName = IndexFileNames.segmentFileName(docStoreSegment, "", IndexFileNames.VECTORS_INDEX_EXTENSION);
       String docName = IndexFileNames.segmentFileName(docStoreSegment, "", IndexFileNames.VECTORS_DOCUMENTS_EXTENSION);
       String fldName = IndexFileNames.segmentFileName(docStoreSegment, "", IndexFileNames.VECTORS_FIELDS_EXTENSION);
+      hasVectors = true;
       tvx = docWriter.directory.createOutput(idxName);
       tvd = docWriter.directory.createOutput(docName);
       tvf = docWriter.directory.createOutput(fldName);
@@ -210,6 +223,7 @@ final class TermVectorsTermsWriter extends TermsHashConsumer {
 
   @Override
   public void abort() {
+    hasVectors = false;
     if (tvx != null) {
       try {
         tvx.close();

@@ -41,6 +41,10 @@ public abstract class StringIndexDocValues extends DocValues {
       }
       this.vs = vs;
     }
+
+    public FieldCache.DocTermsIndex getDocTermsIndex() {
+      return termsIndex;
+    }
   
     protected abstract String toTerm(String readableValue);
 
@@ -100,7 +104,9 @@ public abstract class StringIndexDocValues extends DocValues {
 
       @Override
       public void fillValue(int doc) {
-        mval.value = termsIndex.getTerm(doc, val.value);
+        int ord = termsIndex.getOrd(doc);
+        mval.exists = ord != 0;
+        mval.value = termsIndex.lookup(ord, mval.value);
       }
     };
   }

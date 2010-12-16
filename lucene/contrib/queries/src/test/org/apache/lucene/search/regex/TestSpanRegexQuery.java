@@ -29,6 +29,7 @@ import org.apache.lucene.index.IndexWriterConfig.OpenMode;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.MultiSearcher;
 import org.apache.lucene.search.spans.SpanFirstQuery;
+import org.apache.lucene.search.spans.SpanMultiTermQueryWrapper;
 import org.apache.lucene.search.spans.SpanNearQuery;
 import org.apache.lucene.search.spans.SpanQuery;
 import org.apache.lucene.store.Directory;
@@ -74,7 +75,7 @@ public class TestSpanRegexQuery extends LuceneTestCase {
     writer.close();
 
     IndexSearcher searcher = new IndexSearcher(directory, true);
-    SpanRegexQuery srq = new SpanRegexQuery(new Term("field", "aut.*"));
+    SpanQuery srq = new SpanMultiTermQueryWrapper<RegexQuery>(new RegexQuery(new Term("field", "aut.*")));
     SpanFirstQuery sfq = new SpanFirstQuery(srq, 1);
     // SpanNearQuery query = new SpanNearQuery(new SpanQuery[] {srq, stq}, 6,
     // true);
@@ -83,12 +84,12 @@ public class TestSpanRegexQuery extends LuceneTestCase {
     searcher.close();
     directory.close();
   }
-
+  
   public void testSpanRegexBug() throws CorruptIndexException, IOException {
     createRAMDirectories();
 
-    SpanRegexQuery srq = new SpanRegexQuery(new Term("field", "a.*"));
-    SpanRegexQuery stq = new SpanRegexQuery(new Term("field", "b.*"));
+    SpanQuery srq = new SpanMultiTermQueryWrapper<RegexQuery>(new RegexQuery(new Term("field", "a.*")));
+    SpanQuery stq = new SpanMultiTermQueryWrapper<RegexQuery>(new RegexQuery(new Term("field", "b.*")));
     SpanNearQuery query = new SpanNearQuery(new SpanQuery[] { srq, stq }, 6,
         true);
 
@@ -110,7 +111,7 @@ public class TestSpanRegexQuery extends LuceneTestCase {
     indexStoreA.close();
     indexStoreB.close();
   }
-
+  
   private void createRAMDirectories() throws CorruptIndexException,
       LockObtainFailedException, IOException {
     // creating a document to store

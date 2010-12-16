@@ -17,19 +17,20 @@ package org.apache.lucene.util;
  * limitations under the License.
  */
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.MergeScheduler;
-import org.apache.lucene.index.ConcurrentMergeScheduler;
-import org.apache.lucene.index.CheckIndex;
-import org.apache.lucene.index.codecs.CodecProvider;
-import org.apache.lucene.index.codecs.Codec;
-import org.apache.lucene.index.SegmentWriteState;
-import org.apache.lucene.store.Directory;
-import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.Random;
+
+import org.apache.lucene.index.CheckIndex;
+import org.apache.lucene.index.ConcurrentMergeScheduler;
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.LogMergePolicy;
+import org.apache.lucene.index.MergeScheduler;
+import org.apache.lucene.index.codecs.Codec;
+import org.apache.lucene.index.codecs.CodecProvider;
+import org.apache.lucene.store.Directory;
 
 public class _TestUtil {
 
@@ -68,18 +69,25 @@ public class _TestUtil {
   /** This runs the CheckIndex tool on the index in.  If any
    *  issues are hit, a RuntimeException is thrown; else,
    *  true is returned. */
-  public static boolean checkIndex(Directory dir) throws IOException {
+  public static CheckIndex.Status checkIndex(Directory dir) throws IOException {
+    return checkIndex(dir, CodecProvider.getDefault());
+  }
+  
+  /** This runs the CheckIndex tool on the index in.  If any
+   *  issues are hit, a RuntimeException is thrown; else,
+   *  true is returned. */
+  public static CheckIndex.Status checkIndex(Directory dir, CodecProvider codecs) throws IOException {
     ByteArrayOutputStream bos = new ByteArrayOutputStream(1024);
-
     CheckIndex checker = new CheckIndex(dir);
     checker.setInfoStream(new PrintStream(bos));
-    CheckIndex.Status indexStatus = checker.checkIndex();
+    CheckIndex.Status indexStatus = checker.checkIndex(null, codecs);
     if (indexStatus == null || indexStatus.clean == false) {
       System.out.println("CheckIndex failed");
       System.out.println(bos.toString());
       throw new RuntimeException("CheckIndex failed");
-    } else
-      return true;
+    } else {
+      return indexStatus;
+    }
   }
 
   /** start and end are BOTH inclusive */
@@ -185,12 +193,7 @@ public class _TestUtil {
   }
 
   public static CodecProvider alwaysCodec(final Codec c) {
-    return new CodecProvider() {
-      @Override
-      public Codec getWriter(SegmentWriteState state) {
-        return c;
-      }
-
+    CodecProvider p = new CodecProvider() {
       @Override
       public Codec lookup(String name) {
         // can't do this until we fix PreFlexRW to not
@@ -202,6 +205,8 @@ public class _TestUtil {
         }
       }
     };
+    p.setDefaultFieldCodec(c.name);
+    return p;
   }
 
   /** Return a CodecProvider that can read any of the
@@ -217,6 +222,20 @@ public class _TestUtil {
       return true;
     } else {
       return false;
+    }
+  }
+
+  // just tries to configure things to keep the open file
+  // count lowish
+  public static void reduceOpenFiles(IndexWriter w) {
+    // keep number of open files lowish
+    LogMergePolicy lmp = (LogMergePolicy) w.getConfig().getMergePolicy();
+    lmp.setMergeFactor(Math.min(5, lmp.getMergeFactor()));
+
+    MergeScheduler ms = w.getConfig().getMergeScheduler();
+    if (ms instanceof ConcurrentMergeScheduler) {
+      ((ConcurrentMergeScheduler) ms).setMaxThreadCount(2);
+      ((ConcurrentMergeScheduler) ms).setMaxMergeCount(3);
     }
   }
 }
