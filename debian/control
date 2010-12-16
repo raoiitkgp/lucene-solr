@@ -82,7 +82,7 @@ Depends: ${misc:Depends},
  libxml-commons-external-java (>= 1.3.04),
  glassfish-mail (>= 1:2ur2-b04),
  libgeronimo-stax-1.0-spec-java
-Recommends: solr-tomcat (>= ${binary:Version}) | solr-jetty (>= ${binary:Version})
+Recommends: solr-tomcat (>= ${binary:Version}) | solr-jetty (>= ${binary:Version}), solr-scripts
 Suggests: libmysql-java
 Description: enterprise search server based on Lucene - common files
  Solr is an open source enterprise search server based on the Lucene
@@ -134,3 +134,15 @@ Description: Documentation for Solr
  interface. It runs in a Java servlet container such as Tomcat.
  .
  This package provides the Solr documentation.
+
+Package: solr-scripts
+Architecture: all
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Utility scripts for Solr
+ Solr is an open source enterprise search server based on the Lucene
+ Java search library, with XML/HTTP and JSON APIs, hit highlighting,
+ faceted search, caching, replication, and a web administration
+ interface. It runs in a Java servlet container such as Tomcat.
+ .
+ This package provides scripts for managing Solr replication and
+ snapshots.
