@@ -1,3 +1,9 @@
+lucene-solr (4.0+20101215-1sg29) unstable; urgency=low
+
+  * New upstream version.
+
+ --
+
 lucene-solr (4.0+20100920-1sg28) UNRELEASED; urgency=low
 
   * UNRELEASED
