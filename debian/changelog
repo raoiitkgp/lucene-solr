@@ -2,7 +2,7 @@ lucene-solr (4.0+20101215-1sg29) unstable; urgency=low
 
   * New upstream version.
 
- --
+ -- Ian Eure <ian@simplegeo.com>  Wed, 15 Dec 2010 17:08:46 -0800
 
 lucene-solr (4.0+20100920-1sg28) UNRELEASED; urgency=low
 
