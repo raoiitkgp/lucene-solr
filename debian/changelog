@@ -1,3 +1,15 @@
+lucene-solr (4.0+20101215-1sg31) UNRELEASED; urgency=low
+
+  [ Ian Eure ]
+  * Fix version in debian/rules.
+  * Add solr-scripts package with the scripts for snapshotting and
+    syncing indexes.
+  * Update scripts to work with Debian packaging.
+
+  [ SimpleGeo Nerds ]
+
+ -- SimpleGeo Nerds <nerds@simplegeo.com>  Thu, 16 Dec 2010 19:59:25 +0000
+
 lucene-solr (4.0+20101215-1sg29) unstable; urgency=low
 
   * New upstream version.
