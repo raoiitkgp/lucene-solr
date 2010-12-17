@@ -1,3 +1,27 @@
+lucene-solr (4.0+20101215-1sg32) UNRELEASED; urgency=low
+
+  [ Steven Rowe ]
+  * SOLR-2188: provide maxTokenLength arg for Classic, Standard, and
+    UAX29URLEmail tokenizer factories git-svn-id:
+    https://svn.apache.org/repos/asf/lucene/dev/trunk@1049693 13f79535-
+    47bb-0310-9956-ffa450edef68
+
+  [ Michael McCandless ]
+  * LUCENE-2680: print to infoStream upper bound on how many docIDs we
+    deleted; useful for seeing false deletes git-svn-id:
+    https://svn.apache.org/repos/asf/lucene/dev/trunk@1049918 13f79535-
+    47bb-0310-9956-ffa450edef68
+  * LUCENE-2680: also print if deletes touched 0 terms git-svn-id:
+    https://svn.apache.org/repos/asf/lucene/dev/trunk@1050063 13f79535-
+    47bb-0310-9956-ffa450edef68
+  * improve verbosity of TestNRTThreads git-svn-id:
+    https://svn.apache.org/repos/asf/lucene/dev/trunk@1050084 13f79535-
+    47bb-0310-9956-ffa450edef68
+
+  [ SimpleGeo Nerds ]
+
+ -- SimpleGeo Nerds <nerds@simplegeo.com>  Fri, 17 Dec 2010 00:49:23 +0000
+
 lucene-solr (4.0+20101215-1sg31) UNRELEASED; urgency=low
 
   [ Ian Eure ]
