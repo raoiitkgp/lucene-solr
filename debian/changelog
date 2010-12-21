@@ -1,8 +1,23 @@
-lucene-solr (4.0+20100920-1sg32) unstable; urgency=low
+lucene-solr (4.0+20100920-1sg34) foss-development; urgency=low
 
   * Revert back to 2010/09/20 Solr build.
 
  -- Ian Eure <ian@simplegeo.com>  Tue, 21 Dec 2010 11:19:40 -0800
+
+lucene-solr (4.0+20101215-1sg34) UNRELEASED; urgency=low
+
+  * UNRELEASED
+
+ -- SimpleGeo Nerds <nerds@simplegeo.com>  Mon, 20 Dec 2010 17:35:32 +0000
+
+lucene-solr (4.0+20101215-1sg33) UNRELEASED; urgency=low
+
+  [ Ian Eure ]
+  * Fix file clash between solr-common and solr-scripts.
+
+  [ SimpleGeo Nerds ]
+
+ -- SimpleGeo Nerds <nerds@simplegeo.com>  Fri, 17 Dec 2010 18:41:23 +0000
 
 lucene-solr (4.0+20101215-1sg32) UNRELEASED; urgency=low
 
