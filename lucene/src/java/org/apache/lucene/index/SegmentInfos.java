@@ -78,7 +78,7 @@ public final class SegmentInfos extends Vector<SegmentInfo> {
    * If non-null, information about loading segments_N files
    * will be printed here.  @see #setInfoStream.
    */
-  private static PrintStream infoStream = null;
+  private static PrintStream infoStream;
   
   public SegmentInfos() {
     this(CodecProvider.getDefault());
@@ -308,7 +308,7 @@ public final class SegmentInfos extends Vector<SegmentInfo> {
     SegmentInfos sis = (SegmentInfos) super.clone();
     for(int i=0;i<sis.size();i++) {
       final SegmentInfo info = sis.info(i);
-      assert info.getSegmentCodecs() != null;
+      assert info.getCodec() != null;
       sis.set(i, (SegmentInfo) info.clone());
     }
     sis.userData = new HashMap<String,String>(userData);
@@ -341,8 +341,8 @@ public final class SegmentInfos extends Vector<SegmentInfo> {
     // IndexWriter.prepareCommit has been called (but not
     // yet commit), then the reader will still see itself as
     // current:
-    SegmentInfos sis = new SegmentInfos(codecs);
-    sis.read(directory, codecs);
+    SegmentInfos sis = new SegmentInfos();
+    sis.read(directory);
     return sis.version;
   }
 
@@ -353,7 +353,7 @@ public final class SegmentInfos extends Vector<SegmentInfo> {
    */
   public static Map<String,String> readCurrentUserData(Directory directory, CodecProvider codecs)
     throws CorruptIndexException, IOException {
-    SegmentInfos sis = new SegmentInfos(codecs);
+    SegmentInfos sis = new SegmentInfos();
     sis.read(directory, codecs);
     return sis.getUserData();
   }
@@ -470,9 +470,9 @@ public final class SegmentInfos extends Vector<SegmentInfo> {
       long gen = 0;
       int genLookaheadCount = 0;
       IOException exc = null;
-      int retryCount = 0;
+      boolean retry = false;
 
-      boolean useFirstMethod = true;
+      int method = 0;
 
       // Loop until we succeed in calling doBody() without
       // hitting an IOException.  An IOException most likely
@@ -486,15 +486,14 @@ public final class SegmentInfos extends Vector<SegmentInfo> {
       // it.
       
       // We have three methods for determining the current
-      // generation.  We try the first two in parallel (when
-      // useFirstMethod is true), and fall back to the third
-      // when necessary.
+      // generation.  We try the first two in parallel, and
+      // fall back to the third when necessary.
 
       while(true) {
 
-        if (useFirstMethod) {
+        if (0 == method) {
 
-          // List the directory and use the highest
+          // Method 1: list the directory and use the highest
           // segments_N file.  This method works well as long
           // as there is no stale caching on the directory
           // contents (NOTE: NFS clients often have such stale
@@ -505,17 +504,16 @@ public final class SegmentInfos extends Vector<SegmentInfo> {
 
           files = directory.listAll();
           
-          if (files != null) {
+          if (files != null)
             genA = getCurrentSegmentGeneration(files);
-          }
-          
+
           if (infoStream != null) {
             message("directory listing genA=" + genA);
           }
 
-          // Also open segments.gen and read its
+          // Method 2: open segments.gen and read its
           // contents.  Then we take the larger of the two
-          // gens.  This way, if either approach is hitting
+          // gen's.  This way, if either approach is hitting
           // a stale cache (NFS) we have a better chance of
           // getting the right generation.
           long genB = -1;
@@ -575,42 +573,51 @@ public final class SegmentInfos extends Vector<SegmentInfo> {
 
           // Pick the larger of the two gen's:
           gen = Math.max(genA, genB);
-
+          
           if (gen == -1) {
             // Neither approach found a generation
             throw new IndexNotFoundException("no segments* file found in " + directory + ": files: " + Arrays.toString(files));
           }
         }
 
-        if (useFirstMethod && lastGen == gen && retryCount >= 2) {
-          // Give up on first method -- this is 3rd cycle on
-          // listing directory and checking gen file to
-          // attempt to locate the segments file.
-          useFirstMethod = false;
-        }
-
-        // Second method: since both directory cache and
+        // Third method (fallback if first & second methods
+        // are not reliable): since both directory cache and
         // file contents cache seem to be stale, just
         // advance the generation.
-        if (!useFirstMethod) {
+        if (1 == method || (0 == method && lastGen == gen && retry)) {
+
+          method = 1;
+
           if (genLookaheadCount < defaultGenLookaheadCount) {
             gen++;
             genLookaheadCount++;
             if (infoStream != null) {
               message("look ahead increment gen to " + gen);
             }
-          } else {
-            // All attempts have failed -- throw first exc:
-            throw exc;
           }
-        } else if (lastGen == gen) {
+        }
+
+        if (lastGen == gen) {
+
           // This means we're about to try the same
-          // segments_N last tried.
-          retryCount++;
-        } else {
-          // Segment file has advanced since our last loop
-          // (we made "progress"), so reset retryCount:
-          retryCount = 0;
+          // segments_N last tried.  This is allowed,
+          // exactly once, because writer could have been in
+          // the process of writing segments_N last time.
+
+          if (retry) {
+            // OK, we've tried the same segments_N file
+            // twice in a row, so this must be a real
+            // error.  We throw the original exception we
+            // got.
+            throw exc;
+          } else {
+            retry = true;
+          }
+
+        } else if (0 == method) {
+          // Segment file has advanced since our last loop, so
+          // reset retry:
+          retry = false;
         }
 
         lastGen = gen;
@@ -621,7 +628,7 @@ public final class SegmentInfos extends Vector<SegmentInfo> {
 
         try {
           Object v = doBody(segmentFileName);
-          if (infoStream != null) {
+          if (exc != null && infoStream != null) {
             message("success on " + segmentFileName);
           }
           return v;
@@ -633,13 +640,13 @@ public final class SegmentInfos extends Vector<SegmentInfo> {
           }
 
           if (infoStream != null) {
-            message("primary Exception on '" + segmentFileName + "': " + err + "'; will retry: retryCount=" + retryCount + "; gen = " + gen);
+            message("primary Exception on '" + segmentFileName + "': " + err + "'; will retry: retry=" + retry + "; gen = " + gen);
           }
 
-          if (gen > 1 && useFirstMethod && retryCount == 1) {
+          if (!retry && gen > 1) {
 
-            // This is our second time trying this same segments
-            // file (because retryCount is 1), and, there is
+            // This is our first time trying this segments
+            // file (because retry is false), and, there is
             // possibly a segments_(N-1) (because gen > 1).
             // So, check if the segments_(N-1) exists and
             // try it if so:
@@ -687,7 +694,7 @@ public final class SegmentInfos extends Vector<SegmentInfo> {
    * is last-first.
    */
   public SegmentInfos range(int first, int last) {
-    SegmentInfos infos = new SegmentInfos(codecs);
+    SegmentInfos infos = new SegmentInfos();
     infos.addAll(super.subList(first, last));
     return infos;
   }
@@ -696,6 +703,7 @@ public final class SegmentInfos extends Vector<SegmentInfo> {
   void updateGeneration(SegmentInfos other) {
     lastGeneration = other.lastGeneration;
     generation = other.generation;
+    version = other.version;
   }
 
   final void rollbackCommit(Directory dir) throws IOException {
@@ -711,7 +719,7 @@ public final class SegmentInfos extends Vector<SegmentInfo> {
       // since lastGeneration isn't incremented:
       try {
         final String segmentFileName = IndexFileNames.fileNameFromGeneration(IndexFileNames.SEGMENTS,
-                                                                              "",
+                                                                             "",
                                                                              generation);
         dir.deleteFile(segmentFileName);
       } catch (Throwable t) {
@@ -726,12 +734,7 @@ public final class SegmentInfos extends Vector<SegmentInfo> {
    *  segments file, but writes an invalid checksum at the
    *  end, so that it is not visible to readers.  Once this
    *  is called you must call {@link #finishCommit} to complete
-   *  the commit or {@link #rollbackCommit} to abort it.
-   *  <p>
-   *  Note: {@link #changed()} should be called prior to this
-   *  method if changes have been made to this {@link SegmentInfos} instance
-   *  </p>  
-   **/
+   *  the commit or {@link #rollbackCommit} to abort it. */
   final void prepareCommit(Directory dir) throws IOException {
     if (pendingSegnOutput != null)
       throw new IllegalStateException("prepareCommit was already called");
@@ -815,12 +818,7 @@ public final class SegmentInfos extends Vector<SegmentInfo> {
   }
 
   /** Writes & syncs to the Directory dir, taking care to
-   *  remove the segments file on exception
-   *  <p>
-   *  Note: {@link #changed()} should be called prior to this
-   *  method if changes have been made to this {@link SegmentInfos} instance
-   *  </p>  
-   **/
+   *  remove the segments file on exception */
   final void commit(Directory dir) throws IOException {
     prepareCommit(dir);
     finishCommit(dir);
@@ -870,11 +868,5 @@ public final class SegmentInfos extends Vector<SegmentInfo> {
       count += info.docCount;
     }
     return count;
-  }
-
-  /** Call this before committing if changes have been made to the
-   *  segments. */
-  public void changed() {
-    version++;
   }
 }

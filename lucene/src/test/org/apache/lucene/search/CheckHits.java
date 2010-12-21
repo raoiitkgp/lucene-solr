@@ -20,7 +20,6 @@ package org.apache.lucene.search;
 import java.io.IOException;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.Random;
 
 import junit.framework.Assert;
 
@@ -80,11 +79,11 @@ public class CheckHits {
    * @see Searcher#search(Query,Collector)
    * @see #checkHits
    */
-  public static void checkHitCollector(Random random, Query query, String defaultFieldName,
+  public static void checkHitCollector(Query query, String defaultFieldName,
                                        Searcher searcher, int[] results)
     throws IOException {
 
-    QueryUtils.check(random,query,searcher);
+    QueryUtils.check(query,searcher);
     
     Set<Integer> correct = new TreeSet<Integer>();
     for (int i = 0; i < results.length; i++) {
@@ -99,7 +98,7 @@ public class CheckHits {
 
     for (int i = -1; i < 2; i++) {
       actual.clear();
-      QueryUtils.wrapSearcher(random, searcher, i).search(query, c);
+      QueryUtils.wrapSearcher(searcher, i).search(query, c);
       Assert.assertEquals("Wrap Searcher " + i + ": " +
                           query.toString(defaultFieldName),
                           correct, actual);
@@ -110,7 +109,7 @@ public class CheckHits {
     for (int i = -1; i < 2; i++) {
       actual.clear();
       QueryUtils.wrapUnderlyingReader
-        (random, (IndexSearcher)searcher, i).search(query, c);
+        ((IndexSearcher)searcher, i).search(query, c);
       Assert.assertEquals("Wrap Reader " + i + ": " +
                           query.toString(defaultFieldName),
                           correct, actual);
@@ -154,7 +153,6 @@ public class CheckHits {
    * @see #checkHitCollector
    */
   public static void checkHits(
-        Random random,
         Query query,
         String defaultFieldName,
         Searcher searcher,
@@ -175,7 +173,7 @@ public class CheckHits {
 
     Assert.assertEquals(query.toString(defaultFieldName), correct, actual);
 
-    QueryUtils.check(random, query,searcher);
+    QueryUtils.check(query,searcher);
   }
 
   /** Tests that a Hits has an expected order of documents */
@@ -453,6 +451,13 @@ public class CheckHits {
    * @see CheckHits#verifyExplanation
    */
   public static class ExplanationAsserter extends Collector {
+
+    /**
+     * @deprecated
+     * @see CheckHits#EXPLAIN_SCORE_TOLERANCE_DELTA
+     */
+    @Deprecated
+    public static float SCORE_TOLERANCE_DELTA = 0.00005f;
 
     Query q;
     Searcher s;

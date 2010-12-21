@@ -269,63 +269,54 @@ public class AnalyzingQueryParser extends org.apache.lucene.queryParser.QueryPar
    * @exception ParseException
    */
   @Override
-  protected Query getRangeQuery(String field, String part1, String part2, boolean startInclusive, boolean endInclusive)
+  protected Query getRangeQuery(String field, String part1, String part2, boolean inclusive)
       throws ParseException {
     // get Analyzer from superclass and tokenize the terms
-    TokenStream source = null;
-    CharTermAttribute termAtt = null;
+    TokenStream source = getAnalyzer().tokenStream(field, new StringReader(part1));
+    CharTermAttribute termAtt = source.addAttribute(CharTermAttribute.class);
     boolean multipleTokens = false;
 
-    if (part1 != null) {
-      // part1
-      try {
-        source = getAnalyzer().tokenStream(field, new StringReader(part1));
-        termAtt = source.addAttribute(CharTermAttribute.class);
-        multipleTokens = false;
-
-
-        if (source.incrementToken()) {
-          part1 = termAtt.toString();
-        }
-        multipleTokens = source.incrementToken();
-      } catch (IOException e) {
-        // ignore
+    // part1
+    try {
+      if (source.incrementToken()) {
+        part1 = termAtt.toString();
       }
-      try {
-        source.close();
-      } catch (IOException e) {
-        // ignore
-      }
-      if (multipleTokens) {
-        throw new ParseException("Cannot build RangeQuery with analyzer " + getAnalyzer().getClass()
-            + " - tokens were added to part1");
-      }
+      multipleTokens = source.incrementToken();
+    } catch (IOException e) {
+      // ignore
+    }
+    try {
+      source.close();
+    } catch (IOException e) {
+      // ignore
+    }
+    if (multipleTokens) {
+      throw new ParseException("Cannot build RangeQuery with analyzer " + getAnalyzer().getClass()
+          + " - tokens were added to part1");
     }
 
-    if (part2 != null) {
-      // part2
-      source = getAnalyzer().tokenStream(field, new StringReader(part2));
-      termAtt = source.addAttribute(CharTermAttribute.class);
-
-      try {
-        if (source.incrementToken()) {
-          part2 = termAtt.toString();
-        }
-        multipleTokens = source.incrementToken();
-      } catch (IOException e) {
-        // ignore
+    // part2
+    source = getAnalyzer().tokenStream(field, new StringReader(part2));
+    termAtt = source.addAttribute(CharTermAttribute.class);
+    
+    try {
+      if (source.incrementToken()) {
+        part2 = termAtt.toString();
       }
-      try {
-        source.close();
-      } catch (IOException e) {
-        // ignore
-      }
-      if (multipleTokens) {
-        throw new ParseException("Cannot build RangeQuery with analyzer " + getAnalyzer().getClass()
-            + " - tokens were added to part2");
-      }
+      multipleTokens = source.incrementToken();
+    } catch (IOException e) {
+      // ignore
     }
-    return super.getRangeQuery(field, part1, part2, startInclusive, endInclusive);
+    try {
+      source.close();
+    } catch (IOException e) {
+      // ignore
+    }
+    if (multipleTokens) {
+      throw new ParseException("Cannot build RangeQuery with analyzer " + getAnalyzer().getClass()
+          + " - tokens were added to part2");
+    }
+    return super.getRangeQuery(field, part1, part2, inclusive);
   }
 
 }

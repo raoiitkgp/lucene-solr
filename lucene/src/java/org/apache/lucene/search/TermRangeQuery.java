@@ -20,9 +20,10 @@ package org.apache.lucene.search;
 import java.io.IOException;
 import java.text.Collator;
 
-import org.apache.lucene.index.Terms;
+import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.TermsEnum;
-import org.apache.lucene.util.AttributeSource;
+import org.apache.lucene.index.Terms;
+import org.apache.lucene.index.MultiFields;
 import org.apache.lucene.util.ToStringUtils;
 
 /**
@@ -129,18 +130,24 @@ public class TermRangeQuery extends MultiTermQuery {
   public Collator getCollator() { return collator; }
   
   @Override
-  protected TermsEnum getTermsEnum(Terms terms, AttributeSource atts) throws IOException {
+  protected TermsEnum getTermsEnum(IndexReader reader) throws IOException {
     if (collator == null && lowerTerm != null && upperTerm != null && lowerTerm.compareTo(upperTerm) > 0) {
       return TermsEnum.EMPTY;
     }
-    
-    TermsEnum tenum = terms.iterator();
-    
     if ((lowerTerm == null || (collator == null && includeLower && "".equals(lowerTerm))) && upperTerm == null) {
-      return tenum;
+      // NOTE: for now, MultiTermQuery enums terms at the
+      // MultiReader level, so we must use MultiFields here:
+      final Terms terms = MultiFields.getTerms(reader, field);
+      return (terms != null) ? terms.iterator() : null;
     }
-    return new TermRangeTermsEnum(tenum,
+    return new TermRangeTermsEnum(reader, field,
         lowerTerm, upperTerm, includeLower, includeUpper, collator);
+  }
+
+  /** @deprecated */
+  @Deprecated
+  public String field() {
+    return getField();
   }
 
   /** Prints a user-readable version of this query. */
@@ -152,9 +159,9 @@ public class TermRangeQuery extends MultiTermQuery {
           buffer.append(":");
       }
       buffer.append(includeLower ? '[' : '{');
-      buffer.append(lowerTerm != null ? ("*".equals(lowerTerm) ? "\\*" : lowerTerm)  : "*");
+      buffer.append(lowerTerm != null ? lowerTerm : "*");
       buffer.append(" TO ");
-      buffer.append(upperTerm != null ? ("*".equals(upperTerm) ? "\\*" : upperTerm) : "*");
+      buffer.append(upperTerm != null ? upperTerm : "*");
       buffer.append(includeUpper ? ']' : '}');
       buffer.append(ToStringUtils.boost(getBoost()));
       return buffer.toString();

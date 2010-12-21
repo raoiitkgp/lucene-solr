@@ -44,9 +44,9 @@ public abstract class Transformer {
    *
    * @param context The current context
    * @param row     A row of data
-   * @return The changed data. It must be a {@link Map}&lt;{@link String}, {@link Object}&gt; if it returns
+   * @return The changed data. It must be a Map<String, Object> if it returns
    *         only one row or if there are multiple rows to be returned it must
-   *         be a {@link java.util.List}&lt;{@link Map}&lt;{@link String}, {@link Object}&gt;&gt;
+   *         be a List<Map<String, Object>>
    */
   public abstract Object transformRow(Map<String, Object> row, Context context);
 }

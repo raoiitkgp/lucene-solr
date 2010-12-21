@@ -27,11 +27,11 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A {@link Transformer} implementation which strip off HTML tags using {@link HTMLStripCharFilter} This is useful
+ * A Transformer implementation which strip off HTML tags using org.apache.solr.analysis.HTMLStripReader This is useful
  * in case you don't need this HTML anyway.
  *
  * @version $Id$
- * @see HTMLStripCharFilter
+ * @see org.apache.solr.analysis.HTMLStripCharFilter
  * @since solr 1.4
  */
 public class HTMLStripTransformer extends Transformer {

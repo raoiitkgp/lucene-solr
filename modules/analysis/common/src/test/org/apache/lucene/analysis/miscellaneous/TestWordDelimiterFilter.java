@@ -25,6 +25,7 @@ import org.apache.lucene.analysis.Token;
 import org.apache.lucene.analysis.core.KeywordTokenizer;
 import org.apache.lucene.analysis.core.StopFilter;
 import org.apache.lucene.analysis.core.WhitespaceTokenizer;
+import org.apache.lucene.analysis.miscellaneous.SingleTokenTokenStream;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
@@ -67,14 +68,18 @@ public class TestWordDelimiterFilter extends BaseTokenStreamTestCase {
 
     // test that subwords and catenated subwords have
     // the correct offsets.
-    WordDelimiterFilter wdf = new WordDelimiterFilter(new SingleTokenTokenStream(new Token("foo-bar", 5, 12)), WordDelimiterIterator.DEFAULT_WORD_DELIM_TABLE, 1, 1, 0, 0, 1, 1, 0, 1, 1, null);
+    WordDelimiterFilter wdf = new WordDelimiterFilter(
+            new SingleTokenTokenStream(new Token("foo-bar", 5, 12)),
+    1,1,0,0,1,1,0);
 
     assertTokenStreamContents(wdf, 
         new String[] { "foo", "bar", "foobar" },
         new int[] { 5, 9, 5 }, 
         new int[] { 8, 12, 12 });
 
-    wdf = new WordDelimiterFilter(new SingleTokenTokenStream(new Token("foo-bar", 5, 6)), WordDelimiterIterator.DEFAULT_WORD_DELIM_TABLE, 1, 1, 0, 0, 1, 1, 0, 1, 1, null);
+    wdf = new WordDelimiterFilter(
+            new SingleTokenTokenStream(new Token("foo-bar", 5, 6)),
+    1,1,0,0,1,1,0);
     
     assertTokenStreamContents(wdf,
         new String[] { "foo", "bar", "foobar" },
@@ -85,7 +90,10 @@ public class TestWordDelimiterFilter extends BaseTokenStreamTestCase {
   @Test
   public void testOffsetChange() throws Exception
   {
-    WordDelimiterFilter wdf = new WordDelimiterFilter(new SingleTokenTokenStream(new Token("übelkeit)", 7, 16)), WordDelimiterIterator.DEFAULT_WORD_DELIM_TABLE, 1, 1, 0, 0, 1, 1, 0, 1, 1, null);
+    WordDelimiterFilter wdf = new WordDelimiterFilter(
+      new SingleTokenTokenStream(new Token("übelkeit)", 7, 16)),
+      1,1,0,0,1,1,0
+    );
     
     assertTokenStreamContents(wdf,
         new String[] { "übelkeit" },
@@ -96,7 +104,10 @@ public class TestWordDelimiterFilter extends BaseTokenStreamTestCase {
   @Test
   public void testOffsetChange2() throws Exception
   {
-    WordDelimiterFilter wdf = new WordDelimiterFilter(new SingleTokenTokenStream(new Token("(übelkeit", 7, 17)), WordDelimiterIterator.DEFAULT_WORD_DELIM_TABLE, 1, 1, 0, 0, 1, 1, 0, 1, 1, null);
+    WordDelimiterFilter wdf = new WordDelimiterFilter(
+      new SingleTokenTokenStream(new Token("(übelkeit", 7, 17)),
+      1,1,0,0,1,1,0
+    );
     
     assertTokenStreamContents(wdf,
         new String[] { "übelkeit" },
@@ -107,7 +118,10 @@ public class TestWordDelimiterFilter extends BaseTokenStreamTestCase {
   @Test
   public void testOffsetChange3() throws Exception
   {
-    WordDelimiterFilter wdf = new WordDelimiterFilter(new SingleTokenTokenStream(new Token("(übelkeit", 7, 16)), WordDelimiterIterator.DEFAULT_WORD_DELIM_TABLE, 1, 1, 0, 0, 1, 1, 0, 1, 1, null);
+    WordDelimiterFilter wdf = new WordDelimiterFilter(
+      new SingleTokenTokenStream(new Token("(übelkeit", 7, 16)),
+      1,1,0,0,1,1,0
+    );
     
     assertTokenStreamContents(wdf,
         new String[] { "übelkeit" },
@@ -118,7 +132,10 @@ public class TestWordDelimiterFilter extends BaseTokenStreamTestCase {
   @Test
   public void testOffsetChange4() throws Exception
   {
-    WordDelimiterFilter wdf = new WordDelimiterFilter(new SingleTokenTokenStream(new Token("(foo,bar)", 7, 16)), WordDelimiterIterator.DEFAULT_WORD_DELIM_TABLE, 1, 1, 0, 0, 1, 1, 0, 1, 1, null);
+    WordDelimiterFilter wdf = new WordDelimiterFilter(
+      new SingleTokenTokenStream(new Token("(foo,bar)", 7, 16)),
+      1,1,0,0,1,1,0
+    );
     
     assertTokenStreamContents(wdf,
         new String[] { "foo", "bar", "foobar"},
@@ -128,7 +145,7 @@ public class TestWordDelimiterFilter extends BaseTokenStreamTestCase {
 
   public void doSplit(final String input, String... output) throws Exception {
     WordDelimiterFilter wdf = new WordDelimiterFilter(new KeywordTokenizer(
-                new StringReader(input)), WordDelimiterIterator.DEFAULT_WORD_DELIM_TABLE, 1, 1, 0, 0, 0, 1, 0, 1, 1, null);
+        new StringReader(input)), 1, 1, 0, 0, 0);
     
     assertTokenStreamContents(wdf, output);
   }

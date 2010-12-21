@@ -19,15 +19,14 @@ package org.apache.lucene.search;
 
 import java.io.IOException;
 
-import org.apache.lucene.analysis.MockAnalyzer;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.LogMergePolicy;
-import org.apache.lucene.index.RandomIndexWriter;
+import org.apache.lucene.analysis.MockAnalyzer;
 import org.apache.lucene.index.SerialMergeScheduler;
+import org.apache.lucene.index.RandomIndexWriter;
 import org.apache.lucene.index.SlowMultiReaderWrapper;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.util.LuceneTestCase;
 import org.apache.lucene.util.OpenBitSet;
@@ -130,16 +129,17 @@ public class TestCachingWrapperFilter extends LuceneTestCase {
     writer.addDocument(new Document());
     writer.close();
 
-    IndexReader reader = new SlowMultiReaderWrapper(IndexReader.open(dir, true));
+    IndexReader reader = IndexReader.open(dir, true);
+    IndexReader slowReader = SlowMultiReaderWrapper.wrap(reader);
 
     // not cacheable:
-    assertDocIdSetCacheable(reader, new QueryWrapperFilter(new TermQuery(new Term("test","value"))), false);
+    assertDocIdSetCacheable(slowReader, new QueryWrapperFilter(new TermQuery(new Term("test","value"))), false);
     // returns default empty docidset, always cacheable:
-    assertDocIdSetCacheable(reader, NumericRangeFilter.newIntRange("test", Integer.valueOf(10000), Integer.valueOf(-10000), true, true), true);
+    assertDocIdSetCacheable(slowReader, NumericRangeFilter.newIntRange("test", Integer.valueOf(10000), Integer.valueOf(-10000), true, true), true);
     // is cacheable:
-    assertDocIdSetCacheable(reader, FieldCacheRangeFilter.newIntRange("test", Integer.valueOf(10), Integer.valueOf(20), true, true), true);
+    assertDocIdSetCacheable(slowReader, FieldCacheRangeFilter.newIntRange("test", Integer.valueOf(10), Integer.valueOf(20), true, true), true);
     // a openbitset filter is always cacheable
-    assertDocIdSetCacheable(reader, new Filter() {
+    assertDocIdSetCacheable(slowReader, new Filter() {
       @Override
       public DocIdSet getDocIdSet(IndexReader reader) {
         return new OpenBitSet();
@@ -152,20 +152,14 @@ public class TestCachingWrapperFilter extends LuceneTestCase {
 
   public void testEnforceDeletions() throws Exception {
     Directory dir = newDirectory();
-    RandomIndexWriter writer = new RandomIndexWriter(
-        random,
-        dir,
-        newIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer()).
-            setMergeScheduler(new SerialMergeScheduler()).
-            // asserts below requires no unexpected merges:
-            setMergePolicy(newLogMergePolicy(10))
-    );
+    RandomIndexWriter writer = new RandomIndexWriter(random, dir,
+                                                     newIndexWriterConfig( TEST_VERSION_CURRENT, new MockAnalyzer()).setMergeScheduler(new SerialMergeScheduler()));
 
     // NOTE: cannot use writer.getReader because RIW (on
     // flipping a coin) may give us a newly opened reader,
     // but we use .reopen on this reader below and expect to
     // (must) get an NRT reader:
-    IndexReader reader = IndexReader.open(writer.w);
+    IndexReader reader = writer.w.getReader();
     IndexSearcher searcher = new IndexSearcher(reader);
 
     // add a doc, refresh the reader, and check that its there

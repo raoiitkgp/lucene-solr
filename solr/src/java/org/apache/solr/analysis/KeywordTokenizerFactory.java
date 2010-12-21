@@ -22,7 +22,7 @@ import org.apache.lucene.analysis.core.KeywordTokenizer;
 import java.io.Reader;
 
 /**
- * @version $Id$
+ * @version $Id: LowerCaseTokenizerFactory.java 382610 2006-03-03 01:43:03Z yonik $
  */
 public class KeywordTokenizerFactory extends BaseTokenizerFactory {
   public KeywordTokenizer create(Reader input) {

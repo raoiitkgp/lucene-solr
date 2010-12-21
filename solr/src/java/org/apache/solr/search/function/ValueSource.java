@@ -227,9 +227,30 @@ class ValueSourceScorer extends Scorer {
     return nextDoc();
   }
 
-  @Override
+  public int doc() {
+    return doc;
+  }
+
+  public boolean next() {
+    for (; ;) {
+      doc++;
+      if (doc >= maxDoc) return false;
+      if (matches(doc)) return true;
+    }
+  }
+
+  public boolean skipTo(int target) {
+    doc = target - 1;
+    return next();
+  }
+
+
   public float score() throws IOException {
     return values.floatVal(doc);
+  }
+
+  public Explanation explain(int doc) throws IOException {
+    return values.explain(doc);
   }
 }
 

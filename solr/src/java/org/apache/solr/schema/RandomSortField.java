@@ -167,7 +167,7 @@ public class RandomSortField extends FieldType {
 
           @Override
           public int intVal(int doc) {
-            return hash(doc+seed);
+            return (int)hash(doc+seed);
           }
 
           @Override

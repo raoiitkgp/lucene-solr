@@ -18,6 +18,7 @@ package org.apache.lucene.search.highlight;
  */
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
@@ -30,7 +31,6 @@ import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
 import org.apache.lucene.index.TermPositionVector;
 import org.apache.lucene.index.TermVectorOffsetInfo;
 import org.apache.lucene.util.BytesRef;
-import org.apache.lucene.util.CollectionUtil;
 
 public final class TokenStreamFromTermPositionVector extends TokenStream {
 
@@ -75,7 +75,18 @@ public final class TokenStreamFromTermPositionVector extends TokenStream {
         this.positionedTokens.add(token);
       }
     }
-    CollectionUtil.mergeSort(this.positionedTokens, tokenComparator);
+    final Comparator<Token> tokenComparator = new Comparator<Token>() {
+      public int compare(final Token o1, final Token o2) {
+        if (o1.getPositionIncrement() < o2.getPositionIncrement()) {
+          return -1;
+        }
+        if (o1.getPositionIncrement() > o2.getPositionIncrement()) {
+          return 1;
+        }
+        return 0;
+      }
+    };
+    Collections.sort(this.positionedTokens, tokenComparator);
     int lastPosition = -1;
     for (final Token token : this.positionedTokens) {
       int thisPosition = token.getPositionIncrement();
@@ -85,12 +96,6 @@ public final class TokenStreamFromTermPositionVector extends TokenStream {
     this.tokensAtCurrentPosition = this.positionedTokens.iterator();
   }
 
-  private static final Comparator<Token> tokenComparator = new Comparator<Token>() {
-    public int compare(final Token o1, final Token o2) {
-      return o1.getPositionIncrement() - o2.getPositionIncrement();
-    }
-  };
-  
   @Override
   public boolean incrementToken() throws IOException {
     if (this.tokensAtCurrentPosition.hasNext()) {

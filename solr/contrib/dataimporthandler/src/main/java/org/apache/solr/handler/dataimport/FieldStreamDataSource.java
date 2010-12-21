@@ -34,17 +34,17 @@ import static org.apache.solr.handler.dataimport.DataImportHandlerException.SEVE
  * <p/>
  * The datasouce may be configured as follows
  * <p/>
- * &lt;dataSource name="f1" type="FieldStreamDataSource" /&gt;
+ * <datasource name="f1" type="FieldStreamDataSource" />
  * <p/>
- * The entity which uses this datasource must keep and attribute dataField
+ * The enity which uses this datasource must keep and attribute dataField
  * <p/>
- * The fieldname must be resolvable from {@link VariableResolver}
+ * The fieldname must be resolvable from VariableResolver
  * <p/>
- * This may be used with any {@link EntityProcessor} which uses a {@link DataSource}&lt;{@link InputStream}&gt; eg: {@link TikaEntityProcessor}
+ * This may be used with any EntityProcessor which uses a DataSource<InputStream> eg:TikaEntityProcessor
  * <p/>
  *
  * @version $Id$
- * @since 3.1
+ * @since 1.5
  */
 public class FieldStreamDataSource extends DataSource<InputStream> {
   private static final Logger LOG = LoggerFactory.getLogger(FieldReaderDataSource.class);

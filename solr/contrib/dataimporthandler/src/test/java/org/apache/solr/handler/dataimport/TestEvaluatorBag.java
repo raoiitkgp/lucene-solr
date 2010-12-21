@@ -16,13 +16,17 @@
  */
 package org.apache.solr.handler.dataimport;
 
+import static org.junit.Assert.assertEquals;
+
+import org.apache.solr.SolrTestCaseJ4;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.*;
+
+import junit.framework.Assert;
 
 /**
  * <p> Test for EvaluatorBag </p>
@@ -30,7 +34,7 @@ import java.util.*;
  * @version $Id$
  * @since solr 1.3
  */
-public class TestEvaluatorBag extends AbstractDataImportHandlerTestCase {
+public class TestEvaluatorBag extends SolrTestCaseJ4 {
   private static final String ENCODING = "UTF-8";
 
   VariableResolverImpl resolver;
@@ -87,10 +91,10 @@ public class TestEvaluatorBag extends AbstractDataImportHandlerTestCase {
     VariableResolverImpl vr = new VariableResolverImpl();
     vr.addNamespace("a",m);
     List l =  EvaluatorBag.parseParams(" 1 , a.b, 'hello!', 'ds,o,u\'za',",vr);
-    assertEquals(new Double(1),l.get(0));
-    assertEquals("B",((EvaluatorBag.VariableWrapper)l.get(1)).resolve());
-    assertEquals("hello!",l.get(2));
-    assertEquals("ds,o,u'za",l.get(3));
+    Assert.assertEquals(new Double(1),l.get(0));
+    Assert.assertEquals("B",((EvaluatorBag.VariableWrapper)l.get(1)).resolve());
+    Assert.assertEquals("hello!",l.get(2));
+    Assert.assertEquals("ds,o,u'za",l.get(3));
   }
 
   @Test
@@ -116,7 +120,6 @@ public class TestEvaluatorBag extends AbstractDataImportHandlerTestCase {
    * Test method for {@link EvaluatorBag#getDateFormatEvaluator()}.
    */
   @Test
-  @Ignore("Known Locale/TZ problems: see https://issues.apache.org/jira/browse/SOLR-1916")
   public void testGetDateFormatEvaluator() {
     Evaluator dateFormatEval = EvaluatorBag.getDateFormatEvaluator();
     ContextImpl context = new ContextImpl(null, resolver, null, Context.FULL_DUMP, Collections.EMPTY_MAP, null, null);
@@ -151,7 +154,7 @@ public class TestEvaluatorBag extends AbstractDataImportHandlerTestCase {
         values.put("key", entry.getKey());
         resolver.addNamespace("A", values);
 
-        String expected = entry.getValue();
+        String expected = (String) entry.getValue();
         String actual = evaluator.evaluate("A.key", ctx);
         assertEquals(expected, actual);
       }

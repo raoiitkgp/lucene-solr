@@ -16,6 +16,8 @@
  */
 package org.apache.solr.handler.dataimport;
 
+import org.apache.solr.SolrTestCaseJ4;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.*;
@@ -28,17 +30,18 @@ import java.util.*;
  * @version $Id$
  * @since solr 1.3
  */
-public class TestSqlEntityProcessor extends AbstractDataImportHandlerTestCase {
+public class TestSqlEntityProcessor extends SolrTestCaseJ4 {
   private static ThreadLocal<Integer> local = new ThreadLocal<Integer>();
 
   @Test
-  public void testSingleBatch() {
+  public void singleBatch() {
     SqlEntityProcessor sep = new SqlEntityProcessor();
     List<Map<String, Object>> rows = getRows(3);
     VariableResolverImpl vr = new VariableResolverImpl();
     HashMap<String, String> ea = new HashMap<String, String>();
     ea.put("query", "SELECT * FROM A");
-    Context c = getContext(null, vr, getDs(rows), Context.FULL_DUMP, null, ea);
+    Context c = AbstractDataImportHandlerTestCase.getContext(null, vr, getDs(rows),
+            Context.FULL_DUMP, null, ea);
     sep.init(c);
     int count = 0;
     while (true) {
@@ -48,11 +51,11 @@ public class TestSqlEntityProcessor extends AbstractDataImportHandlerTestCase {
       count++;
     }
 
-    assertEquals(3, count);
+    Assert.assertEquals(3, count);
   }
 
   @Test
-  public void testTranformer() {
+  public void tranformer() {
     EntityProcessor sep = new EntityProcessorWrapper( new SqlEntityProcessor(), null);
     List<Map<String, Object>> rows = getRows(2);
     VariableResolverImpl vr = new VariableResolverImpl();
@@ -60,7 +63,8 @@ public class TestSqlEntityProcessor extends AbstractDataImportHandlerTestCase {
     ea.put("query", "SELECT * FROM A");
     ea.put("transformer", T.class.getName());
 
-    sep.init(getContext(null, vr, getDs(rows), Context.FULL_DUMP, null, ea));
+    sep.init(AbstractDataImportHandlerTestCase.getContext(null, vr, getDs(rows),
+            Context.FULL_DUMP, null, ea));
     List<Map<String, Object>> rs = new ArrayList<Map<String, Object>>();
     Map<String, Object> r = null;
     while (true) {
@@ -70,12 +74,12 @@ public class TestSqlEntityProcessor extends AbstractDataImportHandlerTestCase {
       rs.add(r);
 
     }
-    assertEquals(2, rs.size());
-    assertNotNull(rs.get(0).get("T"));
+    Assert.assertEquals(2, rs.size());
+    Assert.assertNotNull(rs.get(0).get("T"));
   }
 
   @Test
-  public void testTranformerWithReflection() {
+  public void tranformerWithReflection() {
     EntityProcessor sep = new EntityProcessorWrapper(new SqlEntityProcessor(), null);
     List<Map<String, Object>> rows = getRows(2);
     VariableResolverImpl vr = new VariableResolverImpl();
@@ -83,7 +87,8 @@ public class TestSqlEntityProcessor extends AbstractDataImportHandlerTestCase {
     ea.put("query", "SELECT * FROM A");
     ea.put("transformer", T3.class.getName());
 
-    sep.init(getContext(null, vr, getDs(rows), Context.FULL_DUMP, null, ea));
+    sep.init(AbstractDataImportHandlerTestCase.getContext(null, vr, getDs(rows),
+            Context.FULL_DUMP, null, ea));
     List<Map<String, Object>> rs = new ArrayList<Map<String, Object>>();
     Map<String, Object> r = null;
     while (true) {
@@ -93,12 +98,12 @@ public class TestSqlEntityProcessor extends AbstractDataImportHandlerTestCase {
       rs.add(r);
 
     }
-    assertEquals(2, rs.size());
-    assertNotNull(rs.get(0).get("T3"));
+    Assert.assertEquals(2, rs.size());
+    Assert.assertNotNull(rs.get(0).get("T3"));
   }
 
   @Test
-  public void testTranformerList() {
+  public void tranformerList() {
     EntityProcessor sep = new EntityProcessorWrapper(new SqlEntityProcessor(),null);
     List<Map<String, Object>> rows = getRows(2);
     VariableResolverImpl vr = new VariableResolverImpl();
@@ -106,7 +111,8 @@ public class TestSqlEntityProcessor extends AbstractDataImportHandlerTestCase {
     HashMap<String, String> ea = new HashMap<String, String>();
     ea.put("query", "SELECT * FROM A");
     ea.put("transformer", T2.class.getName());
-    sep.init(getContext(null, vr, getDs(rows), Context.FULL_DUMP, null, ea));
+    sep.init(AbstractDataImportHandlerTestCase.getContext(null, vr, getDs(rows),
+            Context.FULL_DUMP, null, ea));
 
     local.set(0);
     Map<String, Object> r = null;
@@ -117,8 +123,8 @@ public class TestSqlEntityProcessor extends AbstractDataImportHandlerTestCase {
         break;
       count++;
     }
-    assertEquals(2, (int) local.get());
-    assertEquals(4, count);
+    Assert.assertEquals(2, (int) local.get());
+    Assert.assertEquals(4, count);
   }
 
   private List<Map<String, Object>> getRows(int count) {

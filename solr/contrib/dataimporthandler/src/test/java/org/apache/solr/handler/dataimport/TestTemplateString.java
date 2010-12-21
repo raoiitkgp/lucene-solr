@@ -16,6 +16,8 @@
  */
 package org.apache.solr.handler.dataimport;
 
+import org.apache.solr.SolrTestCaseJ4;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -31,17 +33,20 @@ import java.util.regex.Pattern;
  * @version $Id$
  * @since solr 1.3
  */
-public class TestTemplateString extends AbstractDataImportHandlerTestCase {
+public class TestTemplateString extends SolrTestCaseJ4 {
   @Test
   public void testSimple() {
     VariableResolverImpl vri = new VariableResolverImpl();
     Map<String, Object> ns = new HashMap<String, Object>();
     ns.put("last_index_time", Long.valueOf(1199429363730l));
     vri.addNamespace("indexer", ns);
-    assertEquals("select id from subject where last_modified > 1199429363730",
-                 new TemplateString().replaceTokens(
-                   "select id from subject where last_modified > ${indexer.last_index_time}",
-                   vri));
+    Assert
+            .assertEquals(
+                    "select id from subject where last_modified > 1199429363730",
+                    new TemplateString()
+                            .replaceTokens(
+                            "select id from subject where last_modified > ${indexer.last_index_time}",
+                            vri));
   }
 
   private static Properties EMPTY_PROPS = new Properties();

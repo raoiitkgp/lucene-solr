@@ -20,30 +20,21 @@ package org.apache.lucene.util.automaton;
 import org.apache.lucene.util.LuceneTestCase;
 
 /**
- * Not completely thorough, but tries to test determinism correctness
+ * Not thorough, but tries to test determinism correctness
  * somewhat randomly.
  */
 public class TestDeterminism extends LuceneTestCase {
+  
+  @Override
+  public void setUp() throws Exception {
+    super.setUp();
+  }
   
   /** test a bunch of random regular expressions */
   public void testRegexps() throws Exception {
       int num = 500 * RANDOM_MULTIPLIER;
       for (int i = 0; i < num; i++)
-        assertAutomaton(new RegExp(AutomatonTestUtil.randomRegexp(random), RegExp.NONE).toAutomaton());
-  }
-  
-  /** test against a simple, unoptimized det */
-  public void testAgainstSimple() throws Exception {
-    int num = 2000 * RANDOM_MULTIPLIER;
-    for (int i = 0; i < num; i++) {
-      Automaton a = AutomatonTestUtil.randomAutomaton(random);
-      Automaton b = a.clone();
-      AutomatonTestUtil.determinizeSimple(a);
-      b.deterministic = false; // force det
-      b.determinize();
-      // TODO: more verifications possible?
-      assertTrue(BasicOperations.sameLanguage(a, b));
-    }
+        assertAutomaton(AutomatonTestUtil.randomRegexp(random).toAutomaton());
   }
   
   private static void assertAutomaton(Automaton a) {

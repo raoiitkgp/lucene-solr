@@ -84,10 +84,6 @@ public class TestSearchForDuplicates extends LuceneTestCase {
       lmp.setUseCompoundFile(useCompoundFiles);
       lmp.setUseCompoundDocStore(useCompoundFiles);
       IndexWriter writer = new IndexWriter(directory, conf);
-      if (VERBOSE) {
-        System.out.println("TEST: now build index");
-        writer.setInfoStream(System.out);
-      }
 
       final int MAX_DOCS = 225;
 

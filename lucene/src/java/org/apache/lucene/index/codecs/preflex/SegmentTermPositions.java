@@ -23,11 +23,7 @@ import org.apache.lucene.index.FieldInfos;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.store.IndexInput;
 
-/**
- * @lucene.experimental
- * @deprecated (4.0)
- */
-@Deprecated
+/** @lucene.experimental */
 public final class SegmentTermPositions
 extends SegmentTermDocs  {
   private IndexInput proxStream;

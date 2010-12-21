@@ -16,6 +16,8 @@
  */
 package org.apache.solr.handler.dataimport;
 
+import org.apache.solr.SolrTestCaseJ4;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -31,7 +33,7 @@ import java.util.Map;
  * @version $Id$
  * @since solr 1.3
  */
-public class TestEntityProcessorBase extends AbstractDataImportHandlerTestCase {
+public class TestEntityProcessorBase extends SolrTestCaseJ4 {
 
   @Test
   public void multiTransformer() {
@@ -39,10 +41,10 @@ public class TestEntityProcessorBase extends AbstractDataImportHandlerTestCase {
     Map<String, String> entity = new HashMap<String, String>();
     entity.put("transformer", T1.class.getName() + "," + T2.class.getName()
             + "," + T3.class.getName());
-    fields.add(getField("A", null, null, null, null));
-    fields.add(getField("B", null, null, null, null));
+    fields.add(TestRegexTransformer.getField("A", null, null, null, null));
+    fields.add(TestRegexTransformer.getField("B", null, null, null, null));
 
-    Context context = getContext(null, null, new MockDataSource(), Context.FULL_DUMP,
+    Context context = AbstractDataImportHandlerTestCase.getContext(null, null, new MockDataSource(), Context.FULL_DUMP,
             fields, entity);
     Map<String, Object> src = new HashMap<String, Object>();
     src.put("A", "NA");
@@ -50,9 +52,9 @@ public class TestEntityProcessorBase extends AbstractDataImportHandlerTestCase {
     EntityProcessorWrapper sep = new EntityProcessorWrapper(new SqlEntityProcessor(), null);
     sep.init(context);
     Map<String, Object> res = sep.applyTransformer(src);
-    assertNotNull(res.get("T1"));
-    assertNotNull(res.get("T2"));
-    assertNotNull(res.get("T3"));
+    Assert.assertNotNull(res.get("T1"));
+    Assert.assertNotNull(res.get("T2"));
+    Assert.assertNotNull(res.get("T3"));
   }
 
   static class T1 extends Transformer {

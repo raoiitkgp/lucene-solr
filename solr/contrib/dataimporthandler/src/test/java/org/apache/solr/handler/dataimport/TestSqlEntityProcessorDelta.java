@@ -16,11 +16,10 @@
  */
 package org.apache.solr.handler.dataimport;
 
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -40,34 +39,26 @@ public class TestSqlEntityProcessorDelta extends AbstractDataImportHandlerTestCa
 
   private static final String DELETED_PK_QUERY = "select id from x where last_modified > NOW AND deleted='true'";
 
-  private static final String dataConfig_delta =
-    "<dataConfig>" +
-    "  <dataSource  type=\"MockDataSource\"/>\n" +
-    "  <document>\n" +
-    "    <entity name=\"x\" transformer=\"TemplateTransformer\"" +
-    "            query=\"" + FULLIMPORT_QUERY + "\"" +
-    "            deletedPkQuery=\"" + DELETED_PK_QUERY + "\"" +
-    "            deltaImportQuery=\"select * from x where id='${dih.delta.id}'\"" +
-    "            deltaQuery=\"" + DELTA_QUERY + "\">\n" +
-    "      <field column=\"id\" name=\"id\"/>\n" +
-    "      <entity name=\"y\" query=\"select * from y where y.A='${x.id}'\">\n" +
-    "        <field column=\"desc\" />\n" +
-    "      </entity>\n" +
-    "    </entity>\n" +
-    "  </document>\n" +
-    "</dataConfig>\n";
-
-  @BeforeClass
-  public static void beforeClass() throws Exception {
-    initCore("dataimport-solrconfig.xml", "dataimport-schema.xml");
+  @Override
+  public String getSchemaFile() {
+    return "dataimport-schema.xml";
   }
 
-  @Before @Override
+  @Override
+  public String getSolrConfigFile() {
+    return "dataimport-solrconfig.xml";
+  }
+
+  @Override
   public void setUp() throws Exception {
     super.setUp();
-    clearIndex();
-    assertU(commit());
   }
+
+  @Override
+  public void tearDown() throws Exception {
+    super.tearDown();
+  }
+
 
   @SuppressWarnings("unchecked")
   private void add1document() throws Exception {
@@ -80,7 +71,7 @@ public class TestSqlEntityProcessorDelta extends AbstractDataImportHandlerTestCa
     MockDataSource.setIterator("select * from y where y.A='1'", childRow
         .iterator());
 
-    runFullImport(dataConfig_delta);
+    super.runFullImport(dataConfig_delta);
 
     assertQ(req("*:* OR add1document"), "//*[@numFound='1']");
     assertQ(req("id:1"), "//*[@numFound='1']");
@@ -111,7 +102,7 @@ public class TestSqlEntityProcessorDelta extends AbstractDataImportHandlerTestCa
     MockDataSource.setIterator("select * from y where y.A='1'", childRow
         .iterator());
 
-    runDeltaImport(dataConfig_delta);
+    super.runDeltaImport(dataConfig_delta);
     assertQ(req("*:* OR testCompositePk_DeltaImport_delete"), "//*[@numFound='0']");
   }
 
@@ -132,10 +123,10 @@ public class TestSqlEntityProcessorDelta extends AbstractDataImportHandlerTestCa
 
     List childRow = new ArrayList();
     childRow.add(createMap("desc", "hello"));
-    MockDataSource.setIterator("select * from y where y.A='1'",
-        childRow.iterator());
+    MockDataSource.setIterator("select * from y where y.A='1'", childRow
+        .iterator());
 
-    runDeltaImport(dataConfig_delta);
+    super.runDeltaImport(dataConfig_delta);
 
     assertQ(req("*:* OR testCompositePk_DeltaImport_empty"), "//*[@numFound='1']");
     assertQ(req("id:1"), "//*[@numFound='1']");
@@ -146,7 +137,7 @@ public class TestSqlEntityProcessorDelta extends AbstractDataImportHandlerTestCa
   
   @Test
   @SuppressWarnings("unchecked")
-  public void testCompositePk_DeltaImport_replace_delete() throws Exception {
+  public void XtestCompositePk_DeltaImport_replace_delete() throws Exception {
     add1document();
     MockDataSource.clearCache();
 
@@ -170,7 +161,7 @@ public class TestSqlEntityProcessorDelta extends AbstractDataImportHandlerTestCa
     MockDataSource.setIterator("select * from y where y.A='1'", childRow
         .iterator());
 
-    runDeltaImport(dataConfig_delta);
+    super.runDeltaImport(dataConfig_delta);
 
     assertQ(req("*:* OR testCompositePk_DeltaImport_replace_delete"), "//*[@numFound='0']");
   }
@@ -200,7 +191,7 @@ public class TestSqlEntityProcessorDelta extends AbstractDataImportHandlerTestCa
     MockDataSource.setIterator("select * from y where y.A='1'", childRow
         .iterator());
 
-    runDeltaImport(dataConfig_delta);
+    super.runDeltaImport(dataConfig_delta);
 
     assertQ(req("*:* OR XtestCompositePk_DeltaImport_replace_nodelete"), "//*[@numFound='1']");
     assertQ(req("id:1"), "//*[@numFound='1']");
@@ -229,7 +220,7 @@ public class TestSqlEntityProcessorDelta extends AbstractDataImportHandlerTestCa
     MockDataSource.setIterator("select * from y where y.A='2'", childRow
         .iterator());
 
-    runDeltaImport(dataConfig_delta);
+    super.runDeltaImport(dataConfig_delta);
 
     assertQ(req("*:* OR testCompositePk_DeltaImport_add"), "//*[@numFound='2']");
     assertQ(req("id:1"), "//*[@numFound='1']");
@@ -247,7 +238,7 @@ public class TestSqlEntityProcessorDelta extends AbstractDataImportHandlerTestCa
     MockDataSource.setIterator(DELTA_QUERY,
         Collections.EMPTY_LIST.iterator());
 
-    runDeltaImport(dataConfig_delta);
+    super.runDeltaImport(dataConfig_delta);
 
     assertQ(req("*:* OR testCompositePk_DeltaImport_nodelta"), "//*[@numFound='1']");
     assertQ(req("id:1 OR testCompositePk_DeltaImport_nodelta"), "//*[@numFound='1']");
@@ -280,11 +271,25 @@ public class TestSqlEntityProcessorDelta extends AbstractDataImportHandlerTestCa
     MockDataSource.setIterator("select * from y where y.A='2'", childRow
         .iterator());
 
-    runDeltaImport(dataConfig_delta);
+    super.runDeltaImport(dataConfig_delta);
 
     assertQ(req("*:* OR XtestCompositePk_DeltaImport_add_delete"), "//*[@numFound='1']");
     assertQ(req("id:2"), "//*[@numFound='1']");
     assertQ(req("desc:hello"), "//*[@numFound='0']");
     assertQ(req("desc:goodbye"), "//*[@numFound='1']");
   }
+
+  private static String dataConfig_delta = "<dataConfig><dataSource  type=\"MockDataSource\"/>\n"
+    + "       <document>\n"
+    + "               <entity name=\"x\" transformer=\"TemplateTransformer\""
+    + "				query=\"" + FULLIMPORT_QUERY + "\""
+    + "				deletedPkQuery=\"" + DELETED_PK_QUERY + "\""
+    + " 				deltaImportQuery=\"select * from x where id='${dataimporter.delta.id}'\""
+    + "				deltaQuery=\"" + DELTA_QUERY + "\">\n"
+    + "                       <field column=\"id\" name=\"id\"/>\n"
+    + "                       <entity name=\"y\" query=\"select * from y where y.A='${x.id}'\">\n"
+    + "                               <field column=\"desc\" />\n"
+    + "                       </entity>\n" + "               </entity>\n"
+    + "       </document>\n" + "</dataConfig>\n";
+
 }

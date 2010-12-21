@@ -21,14 +21,13 @@ import java.util.Date;
 public class MutableValueDate extends MutableValueLong {
   @Override
   public Object toObject() {
-    return exists ? new Date(value) : null;
+    return new Date(value);
   }
 
   @Override
   public MutableValue duplicate() {
     MutableValueDate v = new MutableValueDate();
     v.value = this.value;
-    v.exists = this.exists;
     return v;
   }  
 }

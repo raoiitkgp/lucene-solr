@@ -41,9 +41,9 @@ import java.util.Set;
  * the {@link KeywordAttribute} before this {@link TokenStream}.
  * </p>
  * @see KeywordMarkerFilter
- * @deprecated (3.1) Use {@link SnowballFilter} with 
+ * @deprecated Use {@link SnowballFilter} with 
  * {@link org.tartarus.snowball.ext.FrenchStemmer} instead, which has the
- * same functionality. This filter will be removed in Lucene 5.0
+ * same functionality. This filter will be removed in Lucene 4.0
  */
 @Deprecated
 public final class FrenchStemFilter extends TokenFilter {
@@ -52,12 +52,25 @@ public final class FrenchStemFilter extends TokenFilter {
 	 * The actual token in the input stream.
 	 */
 	private FrenchStemmer stemmer = new FrenchStemmer();
+	private Set<?> exclusions = null;
 	
 	private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
   private final KeywordAttribute keywordAttr = addAttribute(KeywordAttribute.class);
 
 	public FrenchStemFilter( TokenStream in ) {
     super(in);
+	}
+
+  /**
+   * 
+   * @param in the {@link TokenStream} to filter
+   * @param exclusiontable a set of terms not to be stemmed
+   * @deprecated use {@link KeywordAttribute} with {@link KeywordMarkerFilter} instead.
+   */
+	@Deprecated // TODO remove in 3.2
+	public FrenchStemFilter( TokenStream in, Set<?> exclusiontable ) {
+		this( in );
+		exclusions = exclusiontable;
 	}
 
 	/**
@@ -69,7 +82,7 @@ public final class FrenchStemFilter extends TokenFilter {
 	    String term = termAtt.toString();
 
 	    // Check the exclusion table
-	    if (!keywordAttr.isKeyword()) {
+	    if ( !keywordAttr.isKeyword() && (exclusions == null || !exclusions.contains( term )) ) {
 	      String s = stemmer.stem( term );
 	      // If not stemmed, don't waste the time  adjusting the token.
 	      if ((s != null) && !s.equals( term ) )
@@ -87,6 +100,14 @@ public final class FrenchStemFilter extends TokenFilter {
 		if ( stemmer != null ) {
 			this.stemmer = stemmer;
 		}
+	}
+	/**
+	 * Set an alternative exclusion list for this filter.
+   * @deprecated use {@link KeywordAttribute} with {@link KeywordMarkerFilter} instead.
+	 */
+	@Deprecated // TODO remove in 3.2
+	public void setExclusionTable( Map<?,?> exclusiontable ) {
+		exclusions = new HashSet(exclusiontable.keySet());
 	}
 }
 

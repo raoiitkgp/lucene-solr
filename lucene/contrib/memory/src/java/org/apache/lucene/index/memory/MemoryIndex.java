@@ -55,7 +55,6 @@ import org.apache.lucene.search.Searcher;
 import org.apache.lucene.search.Scorer;
 import org.apache.lucene.search.Similarity;
 import org.apache.lucene.store.RAMDirectory; // for javadocs
-import org.apache.lucene.util.ArrayUtil;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.Bits;
 import org.apache.lucene.util.Constants; // for javadocs
@@ -203,8 +202,7 @@ public class MemoryIndex implements Serializable {
    * Sorts term entries into ascending order; also works for
    * Arrays.binarySearch() and Arrays.sort()
    */
-  private static final Comparator<Object> termComparator = new Comparator<Object>() {
-    @SuppressWarnings("unchecked")
+  private static final Comparator termComparator = new Comparator() {
     public int compare(Object o1, Object o2) {
       if (o1 instanceof Map.Entry<?,?>) o1 = ((Map.Entry<?,?>) o1).getKey();
       if (o2 instanceof Map.Entry<?,?>) o2 = ((Map.Entry<?,?>) o2).getKey();
@@ -515,7 +513,6 @@ public class MemoryIndex implements Serializable {
   /** returns a view of the given map's entries, sorted ascending by key */
   private static <K,V> Map.Entry<K,V>[] sort(HashMap<K,V> map) {
     int size = map.size();
-    @SuppressWarnings("unchecked")
     Map.Entry<K,V>[] entries = new Map.Entry[size];
     
     Iterator<Map.Entry<K,V>> iter = map.entrySet().iterator();
@@ -523,7 +520,7 @@ public class MemoryIndex implements Serializable {
       entries[i] = iter.next();
     }
     
-    if (size > 1) ArrayUtil.quickSort(entries, termComparator);
+    if (size > 1) Arrays.sort(entries, termComparator);
     return entries;
   }
   
@@ -877,17 +874,13 @@ public class MemoryIndex implements Serializable {
       }
 
       @Override
-      public void cacheCurrentTerm() {
-      }
-
-      @Override
       public long ord() {
         return termUpto;
       }
 
       @Override
       public int docFreq() {
-        return 1;
+        return info.sortedTerms[termUpto].getValue().size();
       }
 
       @Override

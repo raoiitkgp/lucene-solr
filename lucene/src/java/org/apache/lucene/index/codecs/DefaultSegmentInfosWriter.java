@@ -39,12 +39,9 @@ public class DefaultSegmentInfosWriter extends SegmentInfosWriter {
    *  in the new flex format */
   public static final int FORMAT_4_0 = -10;
 
-  /** Each segment records whether it has term vectors */
-  public static final int FORMAT_HAS_VECTORS = -11;
-
   /** This must always point to the most recent file format.
    * whenever you add a new format, make it 1 smaller (negative version logic)! */
-  public static final int FORMAT_CURRENT = FORMAT_HAS_VECTORS;
+  public static final int FORMAT_CURRENT = FORMAT_4_0;
   
   /** This must always point to the first supported file format. */
   public static final int FORMAT_MINIMUM = FORMAT_DIAGNOSTICS;
@@ -54,7 +51,8 @@ public class DefaultSegmentInfosWriter extends SegmentInfosWriter {
           throws IOException {
     IndexOutput out = createOutput(dir, segmentFileName);
     out.writeInt(FORMAT_CURRENT); // write FORMAT
-    out.writeLong(infos.version);
+    out.writeLong(++infos.version); // every write changes
+                                 // the index
     out.writeInt(infos.counter); // write counter
     out.writeInt(infos.size()); // write infos
     for (SegmentInfo si : infos) {

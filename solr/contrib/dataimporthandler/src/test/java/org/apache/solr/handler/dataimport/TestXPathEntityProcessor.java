@@ -16,6 +16,10 @@
  */
 package org.apache.solr.handler.dataimport;
 
+import static org.apache.solr.handler.dataimport.AbstractDataImportHandlerTestCase.createMap;
+
+import org.apache.solr.SolrTestCaseJ4;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.File;
@@ -35,25 +39,26 @@ import java.util.concurrent.TimeUnit;
  * @version $Id$
  * @since solr 1.3
  */
-public class TestXPathEntityProcessor extends AbstractDataImportHandlerTestCase {
+public class TestXPathEntityProcessor extends SolrTestCaseJ4 {
   boolean simulateSlowReader;
   boolean simulateSlowResultProcessor;
   int rowsToRead = -1;
   
   @Test
   public void withFieldsAndXpath() throws Exception {
-    File tmpdir = File.createTempFile("test", "tmp", TEMP_DIR);
-    tmpdir.delete();
+    long time = System.currentTimeMillis();
+    File tmpdir = new File("." + time);
     tmpdir.mkdir();
     tmpdir.deleteOnExit();
-    createFile(tmpdir, "x.xsl", xsl.getBytes(), false);
+    TestFileListEntityProcessor.createFile(tmpdir, "x.xsl", xsl.getBytes(),
+            false);
     Map entityAttrs = createMap("name", "e", "url", "cd.xml",
             XPathEntityProcessor.FOR_EACH, "/catalog/cd");
     List fields = new ArrayList();
     fields.add(createMap("column", "title", "xpath", "/catalog/cd/title"));
     fields.add(createMap("column", "artist", "xpath", "/catalog/cd/artist"));
     fields.add(createMap("column", "year", "xpath", "/catalog/cd/year"));
-    Context c = getContext(null,
+    Context c = AbstractDataImportHandlerTestCase.getContext(null,
             new VariableResolverImpl(), getDataSource(cdData), Context.FULL_DUMP, fields, entityAttrs);
     XPathEntityProcessor xPathEntityProcessor = new XPathEntityProcessor();
     xPathEntityProcessor.init(c);
@@ -64,10 +69,10 @@ public class TestXPathEntityProcessor extends AbstractDataImportHandlerTestCase 
         break;
       result.add(row);
     }
-    assertEquals(3, result.size());
-    assertEquals("Empire Burlesque", result.get(0).get("title"));
-    assertEquals("Bonnie Tyler", result.get(1).get("artist"));
-    assertEquals("1982", result.get(2).get("year"));
+    Assert.assertEquals(3, result.size());
+    Assert.assertEquals("Empire Burlesque", result.get(0).get("title"));
+    Assert.assertEquals("Bonnie Tyler", result.get(1).get("artist"));
+    Assert.assertEquals("1982", result.get(2).get("year"));
   }
 
   @Test
@@ -76,7 +81,7 @@ public class TestXPathEntityProcessor extends AbstractDataImportHandlerTestCase 
             XPathEntityProcessor.FOR_EACH, "/root");
     List fields = new ArrayList();
     fields.add(createMap("column", "a", "xpath", "/root/a", DataImporter.MULTI_VALUED, "true"));
-    Context c = getContext(null,
+    Context c = AbstractDataImportHandlerTestCase.getContext(null,
             new VariableResolverImpl(), getDataSource(testXml), Context.FULL_DUMP, fields, entityAttrs);
     XPathEntityProcessor xPathEntityProcessor = new XPathEntityProcessor();
     xPathEntityProcessor.init(c);
@@ -87,7 +92,7 @@ public class TestXPathEntityProcessor extends AbstractDataImportHandlerTestCase 
         break;
       result.add(row);
     }
-    assertEquals(2, ((List)result.get(0).get("a")).size());
+    Assert.assertEquals(2, ((List)result.get(0).get("a")).size());
   }
 
   @Test
@@ -96,7 +101,7 @@ public class TestXPathEntityProcessor extends AbstractDataImportHandlerTestCase 
             XPathEntityProcessor.FOR_EACH, "/root");
     List fields = new ArrayList();
     fields.add(createMap("column", "a", "xpath", "/root/a" ,"flatten","true"));
-    Context c = getContext(null,
+    Context c = AbstractDataImportHandlerTestCase.getContext(null,
             new VariableResolverImpl(), getDataSource(testXmlFlatten), Context.FULL_DUMP, fields, entityAttrs);
     XPathEntityProcessor xPathEntityProcessor = new XPathEntityProcessor();
     xPathEntityProcessor.init(c);
@@ -107,7 +112,7 @@ public class TestXPathEntityProcessor extends AbstractDataImportHandlerTestCase 
         break;
       result = row;
     }
-    assertEquals("1B2", result.get("a"));
+    Assert.assertEquals("1B2", result.get("a"));
   }
 
   @Test
@@ -121,7 +126,7 @@ public class TestXPathEntityProcessor extends AbstractDataImportHandlerTestCase 
     fields.add(createMap("column", "title", "xpath", "/catalog/cd/title"));
     fields.add(createMap("column", "artist", "xpath", "/catalog/cd/artist"));
     fields.add(createMap("column", "year", "xpath", "/catalog/cd/year"));
-    Context c = getContext(null,
+    Context c = AbstractDataImportHandlerTestCase.getContext(null,
         new VariableResolverImpl(), getDataSource(cdData), Context.FULL_DUMP, fields, entityAttrs);
     XPathEntityProcessor xPathEntityProcessor = new XPathEntityProcessor() {
       private int count;
@@ -175,14 +180,14 @@ public class TestXPathEntityProcessor extends AbstractDataImportHandlerTestCase 
     
     // confirm that publisher thread stops.
     xPathEntityProcessor.publisherThread.join(1000);
-    assertEquals("Expected thread to stop", false, xPathEntityProcessor.publisherThread.isAlive());
+    Assert.assertEquals("Expected thread to stop", false, xPathEntityProcessor.publisherThread.isAlive());
     
-    assertEquals(rowsToRead < 0 ? 3 : rowsToRead, result.size());
+    Assert.assertEquals(rowsToRead < 0 ? 3 : rowsToRead, result.size());
     
     if (rowsToRead < 0) {
-      assertEquals("Empire Burlesque", result.get(0).get("title"));
-      assertEquals("Bonnie Tyler", result.get(1).get("artist"));
-      assertEquals("1982", result.get(2).get("year"));
+      Assert.assertEquals("Empire Burlesque", result.get(0).get("title"));
+      Assert.assertEquals("Bonnie Tyler", result.get(1).get("artist"));
+      Assert.assertEquals("1982", result.get(2).get("year"));
     }
   }
 
@@ -207,8 +212,8 @@ public class TestXPathEntityProcessor extends AbstractDataImportHandlerTestCase 
   
   @Test
   public void withDefaultSolrAndXsl() throws Exception {
-    File tmpdir = File.createTempFile("test", "tmp", TEMP_DIR);
-    tmpdir.delete();
+    long time = System.currentTimeMillis();
+    File tmpdir = new File("." + time);
     tmpdir.mkdir();
     tmpdir.deleteOnExit();
     TestFileListEntityProcessor.createFile(tmpdir, "x.xsl", xsl.getBytes(),
@@ -216,7 +221,7 @@ public class TestXPathEntityProcessor extends AbstractDataImportHandlerTestCase 
     Map entityAttrs = createMap("name", "e",
             XPathEntityProcessor.USE_SOLR_ADD_SCHEMA, "true", "xsl", ""
             + new File(tmpdir, "x.xsl").getAbsolutePath(), "url", "cd.xml");
-    Context c = getContext(null,
+    Context c = AbstractDataImportHandlerTestCase.getContext(null,
             new VariableResolverImpl(), getDataSource(cdData), Context.FULL_DUMP, null, entityAttrs);
     XPathEntityProcessor xPathEntityProcessor = new XPathEntityProcessor();
     xPathEntityProcessor.init(c);
@@ -227,10 +232,10 @@ public class TestXPathEntityProcessor extends AbstractDataImportHandlerTestCase 
         break;
       result.add(row);
     }
-    assertEquals(3, result.size());
-    assertEquals("Empire Burlesque", result.get(0).get("title"));
-    assertEquals("Bonnie Tyler", result.get(1).get("artist"));
-    assertEquals("1982", result.get(2).get("year"));
+    Assert.assertEquals(3, result.size());
+    Assert.assertEquals("Empire Burlesque", result.get(0).get("title"));
+    Assert.assertEquals("Bonnie Tyler", result.get(1).get("artist"));
+    Assert.assertEquals("1982", result.get(2).get("year"));
   }
 
   private DataSource<Reader> getDataSource(final String xml) {

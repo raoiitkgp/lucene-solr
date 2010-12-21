@@ -314,7 +314,6 @@ public class MultiTrie2 extends MultiTrie {
     return -1;
   }
   
-  @SuppressWarnings("fallthrough")
   private int lengthPP(CharSequence cmd) {
     int len = 0;
     for (int i = 0; i < cmd.length(); i++) {
@@ -324,7 +323,7 @@ public class MultiTrie2 extends MultiTrie {
           len += cmd.charAt(i) - 'a' + 1;
           break;
         case 'R':
-          len++; /* intentional fallthrough */
+          len++;
         case 'I':
           break;
       }

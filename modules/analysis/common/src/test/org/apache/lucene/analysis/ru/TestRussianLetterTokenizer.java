@@ -25,7 +25,7 @@ import org.apache.lucene.util.Version;
 
 /**
  * Testcase for {@link RussianLetterTokenizer}
- * @deprecated (3.1) Remove this test class in Lucene 5.0
+ * @deprecated Remove this test class in Lucene 4.0
  */
 @Deprecated
 public class TestRussianLetterTokenizer extends BaseTokenStreamTestCase {

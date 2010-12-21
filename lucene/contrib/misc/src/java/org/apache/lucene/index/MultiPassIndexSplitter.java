@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
-import org.apache.lucene.index.IndexWriter; // javadoc
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
@@ -96,7 +95,7 @@ public class MultiPassIndexSplitter {
           new WhitespaceAnalyzer(Version.LUCENE_CURRENT))
           .setOpenMode(OpenMode.CREATE));
       System.err.println("Writing part " + (i + 1) + " ...");
-      w.addIndexes(input);
+      w.addIndexes(new IndexReader[]{input});
       w.close();
     }
     System.err.println("Done.");
@@ -174,11 +173,13 @@ public class MultiPassIndexSplitter {
    * list of deletions.
    */
   public static class FakeDeleteIndexReader extends FilterIndexReader {
+    // TODO: switch to flex api, here
+
     OpenBitSet dels;
     OpenBitSet oldDels = null;
 
     public FakeDeleteIndexReader(IndexReader in) {
-      super(new SlowMultiReaderWrapper(in));
+      super(in);
       dels = new OpenBitSet(in.maxDoc());
       if (in.hasDeletions()) {
         oldDels = new OpenBitSet(in.maxDoc());
@@ -216,6 +217,11 @@ public class MultiPassIndexSplitter {
     @Override
     public boolean hasDeletions() {
       return !dels.isEmpty();
+    }
+
+    @Override
+    public IndexReader[] getSequentialSubReaders() {
+      return null;
     }
 
     @Override

@@ -41,8 +41,11 @@ import java.util.List;
 import java.util.ArrayList;
 
 /**
- * A point type that indexes a point in an n-dimensional space as separate fields and supports range queries.
- * See {@link LatLonType} for geo-spatial queries.
+ * A point type that indexes a point in an n-dimensional space as separate fields and uses
+ * range queries for bounding box calculations.
+ * <p/>
+ * <p/>
+ * NOTE: There can only be one sub type
  */
 public class PointType extends CoordinateFieldType implements SpatialQueryable {
 

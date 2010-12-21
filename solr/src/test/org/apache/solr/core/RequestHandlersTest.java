@@ -17,32 +17,22 @@
 
 package org.apache.solr.core;
 
-import org.apache.solr.SolrTestCaseJ4;
 import org.apache.solr.handler.StandardRequestHandler;
 import org.apache.solr.request.SolrRequestHandler;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.apache.solr.util.AbstractSolrTestCase;
 
-public class RequestHandlersTest extends SolrTestCaseJ4 {
-  @BeforeClass
-  public static void beforeClass() throws Exception {
-    initCore("solrconfig.xml", "schema.xml");
-  }
+public class RequestHandlersTest extends AbstractSolrTestCase {
 
-  @Test
-  public void testInitCount() {
-    SolrCore core = h.getCore();
-    SolrRequestHandler handler = core.getRequestHandler( "mock" );
-    assertEquals("Incorrect init count",
-                 1, handler.getStatistics().get("initCount"));
-  }
+  public String getSchemaFile() { return "schema.xml"; }
+  public String getSolrConfigFile() { return "solrconfig.xml"; }
 
-  @Test
+  
   public void testLazyLoading() {
     SolrCore core = h.getCore();
     SolrRequestHandler handler = core.getRequestHandler( "lazy" );
     assertFalse( handler instanceof StandardRequestHandler ); 
     
+    // But it should behave just like the 'defaults' request handler above
     assertU(adoc("id", "42",
                  "name", "Zapp Brannigan"));
     assertU(adoc("id", "43",
@@ -58,22 +48,21 @@ public class RequestHandlersTest extends SolrTestCaseJ4 {
     assertU(commit());
 
     assertQ("lazy request handler returns all matches",
-            req("q","id:[42 TO 47]"),
-            "*[count(//doc)=6]");
+            req("id:[42 TO 47]"),
+            "*[count(//doc)=6]"
+            );
 
-        // But it should behave just like the 'defaults' request handler above
     assertQ("lazy handler returns fewer matches",
-            req("q", "id:[42 TO 47]", "qt","lazy"),
+            req("q", "id:[42 TO 47]",   "qt","defaults"),
             "*[count(//doc)=4]"
             );
 
     assertQ("lazy handler includes highlighting",
-            req("q", "name:Zapp OR title:General", "qt","lazy"),
+            req("q", "name:Zapp OR title:General",   "qt","defaults"),
             "//lst[@name='highlighting']"
             );
   }
-
-  @Test
+  
   public void testPathNormalization()
   {
     SolrCore core = h.getCore();

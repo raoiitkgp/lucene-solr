@@ -24,6 +24,7 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Random;
 
 
 public class SimpleFacetsTest extends SolrTestCaseJ4 {
@@ -33,11 +34,12 @@ public class SimpleFacetsTest extends SolrTestCaseJ4 {
     createIndex();
   }
 
+  static Random rand = new Random(); // TODO: a way to use lucene's newRandom()?
   static int random_commit_percent = 30;
   static int random_dupe_percent = 25;   // some duplicates in the index to create deleted docs
 
   static void randomCommit(int percent_chance) {
-    if (random.nextInt(100) <= percent_chance)
+    if (rand.nextInt(100) <= percent_chance)
       assertU(commit());
   }
 
@@ -47,7 +49,7 @@ public class SimpleFacetsTest extends SolrTestCaseJ4 {
   static void add_doc(String... fieldsAndValues) {
     do {
       pendingDocs.add(fieldsAndValues);      
-    } while (random.nextInt(100) <= random_dupe_percent);
+    } while (rand.nextInt(100) <= random_dupe_percent);
 
     // assertU(adoc(fieldsAndValues));
     // randomCommit(random_commit_percent);
@@ -61,7 +63,7 @@ public class SimpleFacetsTest extends SolrTestCaseJ4 {
     indexFacetPrefixMultiValued();
     indexFacetPrefixSingleValued();
     
-   Collections.shuffle(pendingDocs, random);
+   Collections.shuffle(pendingDocs, rand);
     for (String[] doc : pendingDocs) {
       assertU(adoc(doc));
       randomCommit(random_commit_percent);
@@ -92,8 +94,7 @@ public class SimpleFacetsTest extends SolrTestCaseJ4 {
     add_doc("id", "47", 
             "range_facet_f", "28.62", 
             "trait_s", "Pig",
-            "text", "line up and fly directly at the enemy death cannons, clogging them with wreckage!",
-            "zerolen_s","");   
+            "text", "line up and fly directly at the enemy death cannons, clogging them with wreckage!");   
   }
 
   @Test
@@ -299,16 +300,6 @@ public class SimpleFacetsTest extends SolrTestCaseJ4 {
             ,"//int[2][@name='Obnoxious'][.='1']"
             ,"//int[3][@name='Tool'][.='2']"
             );
-
-
-     assertQ(req("q", "id:[42 TO 47]"
-                ,"facet", "true"
-                ,"facet.method","fc"
-                ,"fq", "id:[42 TO 45]"
-                ,"facet.field", "zerolen_s"
-                )
-            ,"*[count(//lst[@name='zerolen_s']/int)=1]"
-     );
   }
 
   public static void indexDateFacets() {

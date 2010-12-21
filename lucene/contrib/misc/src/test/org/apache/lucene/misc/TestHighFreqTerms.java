@@ -36,10 +36,12 @@ public class TestHighFreqTerms extends LuceneTestCase {
   private static IndexWriter writer =null;
   private static Directory dir = null;
   private static IndexReader reader =null;
+  private static Random random = null;
   
   @BeforeClass
   public static void setUpClass() throws Exception {
-    dir = newDirectory();
+    random = newStaticRandom(TestHighFreqTerms.class);
+    dir = newDirectory(random);
     writer = new IndexWriter(dir, newIndexWriterConfig(random,
        TEST_VERSION_CURRENT, new MockAnalyzer(MockTokenizer.WHITESPACE, false))
        .setMaxBufferedDocs(2));

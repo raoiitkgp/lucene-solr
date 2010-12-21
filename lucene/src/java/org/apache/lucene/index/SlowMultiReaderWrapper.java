@@ -18,11 +18,10 @@ package org.apache.lucene.index;
  */
 
 import java.io.IOException;
+import java.util.List;
+import java.util.ArrayList;
 import org.apache.lucene.util.Bits;
-import org.apache.lucene.util.ReaderUtil; // javadoc
-
-import org.apache.lucene.index.DirectoryReader; // javadoc
-import org.apache.lucene.index.MultiReader; // javadoc
+import org.apache.lucene.util.ReaderUtil;
 
 /**
  * This class forces a composite reader (eg a {@link
@@ -47,8 +46,22 @@ import org.apache.lucene.index.MultiReader; // javadoc
  */
 
 public final class SlowMultiReaderWrapper extends FilterIndexReader {
+  /** This method may return the reader back, if the
+   *  incoming reader is already atomic. */
+  public static IndexReader wrap(IndexReader reader) throws IOException {
+    final List<IndexReader> subs = new ArrayList<IndexReader>();
+    ReaderUtil.gatherSubReaders(subs, reader);
+    if (subs == null) {
+      // already an atomic reader
+      return reader;
+    } else if (subs.size() == 1) {
+      return subs.get(0);
+    } else {
+      return new SlowMultiReaderWrapper(reader);
+    }
+  }
 
-  public SlowMultiReaderWrapper(IndexReader other) {
+  private SlowMultiReaderWrapper(IndexReader other) throws IOException {
     super(other);
   }
 
@@ -63,8 +76,7 @@ public final class SlowMultiReaderWrapper extends FilterIndexReader {
   }
 
   @Override
-  public IndexReader[] getSequentialSubReaders() {
-    return null;
+  public void doClose() throws IOException {
+    throw new UnsupportedOperationException("please call close on the original reader instead");
   }
-  
 }

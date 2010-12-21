@@ -49,6 +49,14 @@ public final class LowerCaseFilter extends TokenFilter {
     charUtils = CharacterUtils.getInstance(matchVersion);
   }
   
+  /**
+   * @deprecated Use {@link #LowerCaseFilter(Version, TokenStream)} instead.
+   */
+  @Deprecated
+  public LowerCaseFilter(TokenStream in) {
+    this(Version.LUCENE_30, in);
+  }
+
   @Override
   public final boolean incrementToken() throws IOException {
     if (input.incrementToken()) {

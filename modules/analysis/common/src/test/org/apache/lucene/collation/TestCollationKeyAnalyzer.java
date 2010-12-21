@@ -76,7 +76,6 @@ public class TestCollationKeyAnalyzer extends CollationTestBase {
     // The ICU Collator and Sun java.text.Collator implementations differ in their
     // orderings - "BFJDH" is the ordering for java.text.Collator for Locale.US.
     testCollationKeySort
-    (usAnalyzer, franceAnalyzer, swedenAnalyzer, denmarkAnalyzer, 
-     oStrokeFirst ? "BFJHD" : "BFJDH", "EACGI", "BJDFH", "BJDHF");
+      (usAnalyzer, franceAnalyzer, swedenAnalyzer, denmarkAnalyzer, oStrokeFirst ? "BFJHD" : "BFJDH");
   }
 }

@@ -49,9 +49,9 @@ public class WildcardQueryNode extends FieldQueryNode {
   @Override
   public CharSequence toQueryString(EscapeQuerySyntax escaper) {
     if (isDefaultField(this.field)) {
-      return this.text;
+      return getTermEscaped(escaper);
     } else {
-      return this.field + ":" + this.text;
+      return this.field + ":" + getTermEscaped(escaper);
     }
   }
 

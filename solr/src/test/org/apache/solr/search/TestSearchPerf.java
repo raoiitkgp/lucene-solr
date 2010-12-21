@@ -50,7 +50,7 @@ public class TestSearchPerf extends AbstractSolrTestCase {
     return String.format("%08d", tnum);
   }
 
-  Random r = new Random(0);  // specific seed for reproducible perf testing
+  Random r = new Random(0);
   int nDocs;
   void createIndex(int nDocs) {
     this.nDocs = nDocs;

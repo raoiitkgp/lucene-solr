@@ -24,18 +24,18 @@ import org.apache.lucene.index.SegmentInfo;
 import org.apache.lucene.index.SegmentWriteState;
 import org.apache.lucene.index.SegmentReadState;
 import org.apache.lucene.index.codecs.Codec;
-import org.apache.lucene.index.codecs.PostingsWriterBase;
 import org.apache.lucene.index.codecs.standard.StandardPostingsWriter;
-import org.apache.lucene.index.codecs.PostingsReaderBase;
+import org.apache.lucene.index.codecs.standard.StandardPostingsWriterImpl;
 import org.apache.lucene.index.codecs.standard.StandardPostingsReader;
+import org.apache.lucene.index.codecs.standard.StandardPostingsReaderImpl;
 import org.apache.lucene.index.codecs.FieldsConsumer;
 import org.apache.lucene.index.codecs.FieldsProducer;
-import org.apache.lucene.index.codecs.FixedGapTermsIndexReader;
-import org.apache.lucene.index.codecs.FixedGapTermsIndexWriter;
-import org.apache.lucene.index.codecs.PrefixCodedTermsReader;
-import org.apache.lucene.index.codecs.PrefixCodedTermsWriter;
-import org.apache.lucene.index.codecs.TermsIndexReaderBase;
-import org.apache.lucene.index.codecs.TermsIndexWriterBase;
+import org.apache.lucene.index.codecs.standard.SimpleStandardTermsIndexReader;
+import org.apache.lucene.index.codecs.standard.SimpleStandardTermsIndexWriter;
+import org.apache.lucene.index.codecs.standard.StandardTermsDictReader;
+import org.apache.lucene.index.codecs.standard.StandardTermsDictWriter;
+import org.apache.lucene.index.codecs.standard.StandardTermsIndexReader;
+import org.apache.lucene.index.codecs.standard.StandardTermsIndexWriter;
 import org.apache.lucene.index.codecs.standard.StandardCodec;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.util.BytesRef;
@@ -66,19 +66,19 @@ public class PulsingCodec extends Codec {
 
   @Override
   public FieldsConsumer fieldsConsumer(SegmentWriteState state) throws IOException {
-    // We wrap StandardPostingsWriter, but any StandardPostingsWriter
+    // We wrap StandardPostingsWriterImpl, but any StandardPostingsWriter
     // will work:
-    PostingsWriterBase docsWriter = new StandardPostingsWriter(state);
+    StandardPostingsWriter docsWriter = new StandardPostingsWriterImpl(state);
 
     // Terms that have <= freqCutoff number of docs are
     // "pulsed" (inlined):
-    PostingsWriterBase pulsingWriter = new PulsingPostingsWriterImpl(freqCutoff, docsWriter);
+    StandardPostingsWriter pulsingWriter = new PulsingPostingsWriterImpl(freqCutoff, docsWriter);
 
     // Terms dict index
-    TermsIndexWriterBase indexWriter;
+    StandardTermsIndexWriter indexWriter;
     boolean success = false;
     try {
-      indexWriter = new FixedGapTermsIndexWriter(state);
+      indexWriter = new SimpleStandardTermsIndexWriter(state);
       success = true;
     } finally {
       if (!success) {
@@ -89,7 +89,7 @@ public class PulsingCodec extends Codec {
     // Terms dict
     success = false;
     try {
-      FieldsConsumer ret = new PrefixCodedTermsWriter(indexWriter, state, pulsingWriter, BytesRef.getUTF8SortedAsUnicodeComparator());
+      FieldsConsumer ret = new StandardTermsDictWriter(indexWriter, state, pulsingWriter, BytesRef.getUTF8SortedAsUnicodeComparator());
       success = true;
       return ret;
     } finally {
@@ -106,22 +106,21 @@ public class PulsingCodec extends Codec {
   @Override
   public FieldsProducer fieldsProducer(SegmentReadState state) throws IOException {
 
-    // We wrap StandardPostingsReader, but any StandardPostingsReader
+    // We wrap StandardPostingsReaderImpl, but any StandardPostingsReader
     // will work:
-    PostingsReaderBase docsReader = new StandardPostingsReader(state.dir, state.segmentInfo, state.readBufferSize, state.codecId);
-    PostingsReaderBase pulsingReader = new PulsingPostingsReaderImpl(docsReader);
+    StandardPostingsReader docsReader = new StandardPostingsReaderImpl(state.dir, state.segmentInfo, state.readBufferSize);
+    StandardPostingsReader pulsingReader = new PulsingPostingsReaderImpl(docsReader);
 
     // Terms dict index reader
-    TermsIndexReaderBase indexReader;
+    StandardTermsIndexReader indexReader;
 
     boolean success = false;
     try {
-      indexReader = new FixedGapTermsIndexReader(state.dir,
+      indexReader = new SimpleStandardTermsIndexReader(state.dir,
                                                        state.fieldInfos,
                                                        state.segmentInfo.name,
                                                        state.termsIndexDivisor,
-                                                       BytesRef.getUTF8SortedAsUnicodeComparator(),
-                                                       state.codecId);
+                                                       BytesRef.getUTF8SortedAsUnicodeComparator());
       success = true;
     } finally {
       if (!success) {
@@ -132,13 +131,12 @@ public class PulsingCodec extends Codec {
     // Terms dict reader
     success = false;
     try {
-      FieldsProducer ret = new PrefixCodedTermsReader(indexReader,
+      FieldsProducer ret = new StandardTermsDictReader(indexReader,
                                                        state.dir, state.fieldInfos, state.segmentInfo.name,
                                                        pulsingReader,
                                                        state.readBufferSize,
                                                        BytesRef.getUTF8SortedAsUnicodeComparator(),
-                                                       StandardCodec.TERMS_CACHE_SIZE,
-                                                       state.codecId);
+                                                       StandardCodec.TERMS_CACHE_SIZE);
       success = true;
       return ret;
     } finally {
@@ -153,10 +151,10 @@ public class PulsingCodec extends Codec {
   }
 
   @Override
-  public void files(Directory dir, SegmentInfo segmentInfo, String id, Set<String> files) throws IOException {
-    StandardPostingsReader.files(dir, segmentInfo, id, files);
-    PrefixCodedTermsReader.files(dir, segmentInfo, id, files);
-    FixedGapTermsIndexReader.files(dir, segmentInfo, id, files);
+  public void files(Directory dir, SegmentInfo segmentInfo, Set<String> files) throws IOException {
+    StandardPostingsReaderImpl.files(dir, segmentInfo, files);
+    StandardTermsDictReader.files(dir, segmentInfo, files);
+    SimpleStandardTermsIndexReader.files(dir, segmentInfo, files);
   }
 
   @Override

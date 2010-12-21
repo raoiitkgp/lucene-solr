@@ -17,6 +17,7 @@ package org.apache.lucene.index;
  * limitations under the License.
  */
 
+import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
@@ -24,6 +25,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.MockTokenizer;
@@ -35,13 +37,14 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
-import org.apache.lucene.search.DocIdSetIterator;
 import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.Bits;
 import org.apache.lucene.util.LuceneTestCase;
 import org.apache.lucene.util.UnicodeUtil;
 import org.apache.lucene.util._TestUtil;
+
 
 public class TestPayloads extends LuceneTestCase {
     
@@ -113,9 +116,9 @@ public class TestPayloads extends LuceneTestCase {
         analyzer.setPayloadData("f2", 1, "somedata".getBytes(), 0, 1);
         writer.addDocument(d);
         // flush
-        writer.close();
-
-      SegmentReader reader = getOnlySegmentReader(IndexReader.open(ram, false));
+        writer.close();        
+        
+        SegmentReader reader = SegmentReader.getOnlySegmentReader(ram);
         FieldInfos fi = reader.fieldInfos();
         assertFalse("Payload field bit should not be set.", fi.fieldInfo("f1").storePayloads);
         assertTrue("Payload field bit should be set.", fi.fieldInfo("f2").storePayloads);
@@ -141,7 +144,7 @@ public class TestPayloads extends LuceneTestCase {
         // flush
         writer.close();
 
-      reader = getOnlySegmentReader(IndexReader.open(ram, false));
+        reader = SegmentReader.getOnlySegmentReader(ram);
         fi = reader.fieldInfos();
         assertFalse("Payload field bit should not be set.", fi.fieldInfo("f1").storePayloads);
         assertTrue("Payload field bit should be set.", fi.fieldInfo("f2").storePayloads);
@@ -152,14 +155,21 @@ public class TestPayloads extends LuceneTestCase {
 
     // Tests if payloads are correctly stored and loaded using both RamDirectory and FSDirectory
     public void testPayloadsEncoding() throws Exception {
+        // first perform the test using a RAMDirectory
         Directory dir = newDirectory();
-        performTest(dir);
+        performTest(random, dir);
+        dir.close();
+        // now use a FSDirectory and repeat same test
+        File dirName = _TestUtil.getTempDir("test_payloads");
+        dir = FSDirectory.open(dirName);
+        performTest(random, dir);
+       _TestUtil.rmDir(dirName);
         dir.close();
     }
     
     // builds an index with payloads in the given Directory and performs
     // different tests to verify the payload encoding
-    private void performTest(Directory dir) throws Exception {
+    private void performTest(Random random, Directory dir) throws Exception {
         PayloadAnalyzer analyzer = new PayloadAnalyzer();
         IndexWriter writer = new IndexWriter(dir, newIndexWriterConfig(
             TEST_VERSION_CURRENT, analyzer)
@@ -227,7 +237,7 @@ public class TestPayloads extends LuceneTestCase {
                                                     new BytesRef(terms[i].text()));
         }
         
-        while (tps[0].nextDoc() != DocIdSetIterator.NO_MORE_DOCS) {
+        while (tps[0].nextDoc() != DocsEnum.NO_MORE_DOCS) {
             for (int i = 1; i < numTerms; i++) {
                 tps[i].nextDoc();
             }
@@ -236,11 +246,9 @@ public class TestPayloads extends LuceneTestCase {
             for (int i = 0; i < freq; i++) {
                 for (int j = 0; j < numTerms; j++) {
                     tps[j].nextPosition();
-                    if (tps[j].hasPayload()) {
-                      BytesRef br = tps[j].getPayload();
-                      System.arraycopy(br.bytes, br.offset, verifyPayloadData, offset, br.length);
-                      offset += br.length;
-                    }
+                    BytesRef br = tps[j].getPayload();
+                    System.arraycopy(br.bytes, br.offset, verifyPayloadData, offset, br.length);
+                    offset += br.length;
                 }
             }
         }
@@ -512,7 +520,7 @@ public class TestPayloads extends LuceneTestCase {
         while (terms.next() != null) {
           String termText = terms.term().utf8ToString();
           tp = terms.docsAndPositions(delDocs, tp);
-          while(tp.nextDoc() != DocIdSetIterator.NO_MORE_DOCS) {
+          while(tp.nextDoc() != DocsEnum.NO_MORE_DOCS) {
             int freq = tp.freq();
             for (int i = 0; i < freq; i++) {
               tp.nextPosition();
@@ -595,27 +603,4 @@ public class TestPayloads extends LuceneTestCase {
             return pool.size();
         }
     }
-
-  public void testAcrossFields() throws Exception {
-    Directory dir = newDirectory();
-    RandomIndexWriter writer = new RandomIndexWriter(random, dir,
-                                                     new MockAnalyzer(MockTokenizer.WHITESPACE, true, true));
-    Document doc = new Document();
-    doc.add(new Field("haspayload", "here we go", Field.Store.YES, Field.Index.ANALYZED));
-    writer.addDocument(doc);
-    writer.close();
-
-    writer = new RandomIndexWriter(random, dir,
-                                   new MockAnalyzer(MockTokenizer.WHITESPACE, true, false));
-    doc = new Document();
-    doc.add(new Field("nopayload", "here we go", Field.Store.YES, Field.Index.ANALYZED));
-    writer.addDocument(doc);
-    writer.addDocument(doc);
-    writer.optimize();
-    writer.close();
-
-    _TestUtil.checkIndex(dir);
-
-    dir.close();
-  }
 }

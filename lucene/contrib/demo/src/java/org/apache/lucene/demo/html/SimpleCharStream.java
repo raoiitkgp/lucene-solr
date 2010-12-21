@@ -204,7 +204,7 @@ public class SimpleCharStream
   }
 
   /**
-   * @deprecated (gen)
+   * @deprecated
    * @see #getEndColumn
    */
 
@@ -213,7 +213,7 @@ public class SimpleCharStream
   }
 
   /**
-   * @deprecated (gen)
+   * @deprecated
    * @see #getEndLine
    */
 

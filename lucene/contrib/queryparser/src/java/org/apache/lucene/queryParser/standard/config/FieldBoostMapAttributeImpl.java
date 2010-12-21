@@ -38,18 +38,18 @@ public class FieldBoostMapAttributeImpl extends AttributeImpl
 
   private static final long serialVersionUID = -2104763012523049527L;
 
-  private Map<String, Float> boosts = new LinkedHashMap<String, Float>();
+  private Map<CharSequence, Float> boosts = new LinkedHashMap<CharSequence, Float>();
   
 
   public FieldBoostMapAttributeImpl() {
     // empty constructor
   }
 
-  public void setFieldBoostMap(Map<String, Float> boosts) {
+  public void setFieldBoostMap(Map<CharSequence, Float> boosts) {
     this.boosts = boosts;
   }
   
-  public Map<String, Float> getFieldBoostMap() {
+  public Map<CharSequence, Float> getFieldBoostMap() {
     return this.boosts;
   }
 

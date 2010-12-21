@@ -20,7 +20,6 @@ import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
 import org.apache.solr.common.params.CommonParams;
-import org.apache.solr.common.params.MapSolrParams;
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.common.util.StrUtils;
@@ -41,10 +40,6 @@ public abstract class QParser {
   protected int recurseCount;
 
   protected Query query;
-
-  protected String stringIncludingLocalParams;   // the original query string including any local params
-  protected boolean valFollowedParams;           // true if the value "qstr" followed the localParams
-  protected int localParamsEnd;                  // the position one past where the localParams ended 
 
   /**
    * Constructor for the QParser
@@ -157,7 +152,7 @@ public abstract class QParser {
   //                       $x+=foo (append to global for limited scope)
 
   /** check both local and global params */
-  public String getParam(String name) {
+  protected String getParam(String name) {
     String val;
     if (localParams != null) {
       val = localParams.get(name);
@@ -219,7 +214,7 @@ public abstract class QParser {
 
     Sort sort = null;
     if( sortStr != null ) {
-      sort = QueryParsing.parseSort(sortStr, req);
+      sort = QueryParsing.parseSort(sortStr, req.getSchema());
     }
     return new SortSpec( sort, start, rows );
   }
@@ -246,32 +241,7 @@ public abstract class QParser {
    * then the prefix query parser will be used.
    */
   public static QParser getParser(String qstr, String defaultType, SolrQueryRequest req) throws ParseException {
-    // SolrParams localParams = QueryParsing.getLocalParams(qstr, req.getParams());
-
-    String stringIncludingLocalParams = qstr;
-    SolrParams localParams = null;
-    SolrParams globalParams = req.getParams();
-    boolean valFollowedParams = true;
-    int localParamsEnd = -1;
-
-    if (qstr != null && qstr.startsWith(QueryParsing.LOCALPARAM_START)) {
-      Map<String, String> localMap = new HashMap<String, String>();
-      localParamsEnd = QueryParsing.parseLocalParams(qstr, 0, localMap, globalParams);
-
-      String val = localMap.get(QueryParsing.V);
-      if (val != null) {
-        // val was directly specified in localParams via v=<something> or v=$arg
-        valFollowedParams = false;
-      } else {
-        // use the remainder of the string as the value
-        valFollowedParams = true;
-        val = qstr.substring(localParamsEnd);
-        localMap.put(QueryParsing.V, val);
-      }
-      localParams = new MapSolrParams(localMap);
-    }
-
-
+    SolrParams localParams = QueryParsing.getLocalParams(qstr, req.getParams());
     String type;
     
     if (localParams == null) {
@@ -284,12 +254,7 @@ public abstract class QParser {
     type = type==null ? QParserPlugin.DEFAULT_QTYPE : type;
 
     QParserPlugin qplug = req.getCore().getQueryPlugin(type);
-    QParser parser =  qplug.createParser(qstr, localParams, req.getParams(), req);
-
-    parser.stringIncludingLocalParams = stringIncludingLocalParams;
-    parser.valFollowedParams = valFollowedParams;
-    parser.localParamsEnd = localParamsEnd;
-    return parser;
-  }
+    return qplug.createParser(qstr, localParams, req.getParams(), req);
+  }                            
 
 }

@@ -18,12 +18,13 @@ package org.apache.lucene.analysis.de;
  */
 
 import java.io.IOException;
+import java.util.Set;
 
+import org.apache.lucene.analysis.miscellaneous.KeywordMarkerFilter; // for javadoc
 import org.apache.lucene.analysis.TokenFilter;
 import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.miscellaneous.KeywordMarkerFilter;
-import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.KeywordAttribute;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 
 /**
  * A {@link TokenFilter} that stems German words. 
@@ -45,6 +46,7 @@ public final class GermanStemFilter extends TokenFilter
      * The actual token in the input stream.
      */
     private GermanStemmer stemmer = new GermanStemmer();
+    private Set<?> exclusionSet = null;
 
     private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
     private final KeywordAttribute keywordAttr = addAttribute(KeywordAttribute.class);
@@ -59,14 +61,25 @@ public final class GermanStemFilter extends TokenFilter
     }
 
     /**
+     * Builds a GermanStemFilter that uses an exclusion table.
+     * @deprecated use {@link KeywordAttribute} with {@link KeywordMarkerFilter} instead.
+     */
+    @Deprecated
+    public GermanStemFilter( TokenStream in, Set<?> exclusionSet )
+    {
+      this( in );
+      this.exclusionSet = exclusionSet;
+    }
+
+    /**
      * @return  Returns true for next token in the stream, or false at EOS
      */
     @Override
     public boolean incrementToken() throws IOException {
       if (input.incrementToken()) {
         String term = termAtt.toString();
-
-        if (!keywordAttr.isKeyword()) {
+        // Check the exclusion table.
+        if (!keywordAttr.isKeyword() && (exclusionSet == null || !exclusionSet.contains(term))) {
           String s = stemmer.stem(term);
           // If not stemmed, don't waste the time adjusting the token.
           if ((s != null) && !s.equals(term))
@@ -86,5 +99,16 @@ public final class GermanStemFilter extends TokenFilter
       if ( stemmer != null ) {
         this.stemmer = stemmer;
       }
+    }
+
+
+    /**
+     * Set an alternative exclusion list for this filter.
+     * @deprecated use {@link KeywordAttribute} with {@link KeywordMarkerFilter} instead.
+     */
+    @Deprecated
+    public void setExclusionSet( Set<?> exclusionSet )
+    {
+      this.exclusionSet = exclusionSet;
     }
 }

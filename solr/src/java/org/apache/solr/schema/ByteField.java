@@ -18,8 +18,6 @@ package org.apache.solr.schema;
 
 import org.apache.lucene.document.Fieldable;
 import org.apache.lucene.search.SortField;
-import org.apache.lucene.search.cache.ByteValuesCreator;
-import org.apache.lucene.search.cache.CachedArrayCreator;
 
 import org.apache.solr.response.TextResponseWriter;
 import org.apache.solr.response.XMLWriter;
@@ -30,7 +28,7 @@ import java.io.IOException;
 import java.util.Map;
 
 /**
- * @version $Id$
+ * @version $Id:$
  */
 public class ByteField extends FieldType {
   protected void init(IndexSchema schema, Map<String, String> args) {
@@ -43,7 +41,7 @@ public class ByteField extends FieldType {
   }
 
   public ValueSource getValueSource(SchemaField field) {
-    return new ByteFieldSource( new ByteValuesCreator( field.name, null, CachedArrayCreator.CACHE_VALUES_AND_BITS ) );
+    return new ByteFieldSource(field.name);
   }
 
 

@@ -2,7 +2,6 @@
 package org.apache.lucene.demo.html;
 
 import java.io.*;
-import java.util.Locale;
 import java.util.Properties;
 
 public class HTMLParser implements HTMLParserConstants {
@@ -39,6 +38,14 @@ public class HTMLParser implements HTMLParserConstants {
     public boolean full() throws IOException{
       return this.available() >= PipedInputStream.PIPE_SIZE;
     }
+  }
+
+  /**
+   * @deprecated Use HTMLParser(FileInputStream) instead
+   */
+  @Deprecated
+  public HTMLParser(File file) throws FileNotFoundException {
+    this(new FileInputStream(file));
   }
 
   public String getTitle() throws IOException, InterruptedException {
@@ -84,7 +91,7 @@ InterruptedException {
 
     String sum = summary.toString().trim();
     String tit = getTitle();
-    if (sum.equals(""))
+    if (sum.startsWith(tit) || sum.equals(""))
       return tit;
     else
       return sum;
@@ -224,7 +231,7 @@ InterruptedException {
   Token t1, t2;
   boolean inImg = false;
     t1 = jj_consume_token(TagName);
-   String tagName = t1.image.toLowerCase(Locale.ENGLISH);
+   String tagName = t1.image.toLowerCase();
    if(Tags.WS_ELEMS.contains(tagName) ) {
       addSpace();
     }
@@ -261,7 +268,7 @@ InterruptedException {
                         )
            && t2 != null)
         {
-                currentMetaTag=t2.image.toLowerCase(Locale.ENGLISH);
+                currentMetaTag=t2.image.toLowerCase();
                 if(currentMetaTag != null && currentMetaContent != null) {
                 addMetaTag();
                 }
@@ -269,7 +276,7 @@ InterruptedException {
         if(inMetaTag && t1.image.equalsIgnoreCase("content") && t2 !=
 null)
         {
-                currentMetaContent=t2.image.toLowerCase(Locale.ENGLISH);
+                currentMetaContent=t2.image.toLowerCase();
                 if(currentMetaTag != null && currentMetaContent != null) {
                 addMetaTag();
                 }
@@ -447,15 +454,15 @@ null)
     finally { jj_save(1, xla); }
   }
 
-  private boolean jj_3_2() {
-    if (jj_scan_token(ArgQuote2)) return true;
-    if (jj_scan_token(CloseQuote2)) return true;
-    return false;
-  }
-
   private boolean jj_3_1() {
     if (jj_scan_token(ArgQuote1)) return true;
     if (jj_scan_token(CloseQuote1)) return true;
+    return false;
+  }
+
+  private boolean jj_3_2() {
+    if (jj_scan_token(ArgQuote2)) return true;
+    if (jj_scan_token(CloseQuote2)) return true;
     return false;
   }
 

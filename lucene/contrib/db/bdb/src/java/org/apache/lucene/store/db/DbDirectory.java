@@ -21,7 +21,12 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
-import java.util.*;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Collections;
 
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.Lock;
@@ -206,10 +211,6 @@ public class DbDirectory extends Directory {
     }
 
     @Override
-    public void sync(Collection<String> names) throws IOException {
-    }
-
-  @Override
     public IndexInput openInput(String name)
         throws IOException
     {

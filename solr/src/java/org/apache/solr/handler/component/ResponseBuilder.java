@@ -23,15 +23,18 @@ import org.apache.solr.common.util.NamedList;
 import org.apache.solr.common.util.RTimer;
 import org.apache.solr.common.util.SimpleOrderedMap;
 import org.apache.solr.request.SolrQueryRequest;
-import org.apache.solr.request.SolrRequestInfo;
 import org.apache.solr.response.SolrQueryResponse;
 import org.apache.solr.search.DocListAndSet;
 import org.apache.solr.search.QParser;
-import org.apache.solr.search.SortSpec;
 import org.apache.solr.search.SolrIndexSearcher;
+import org.apache.solr.search.SortSpec;
+import org.apache.solr.util.SolrPluginUtils;
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * This class is experimental and will be changing in the future.
@@ -39,8 +42,9 @@ import java.util.Map;
  * @version $Id$
  * @since solr 1.3
  */
-public class ResponseBuilder
-{
+public class ResponseBuilder {
+
+
   public SolrQueryRequest req;
   public SolrQueryResponse rsp;
   public boolean doHighlights;
@@ -67,16 +71,6 @@ public class ResponseBuilder
   private Query highlightQuery = null;
 
   public List<SearchComponent> components;
-
-  SolrRequestInfo requestInfo;
-
-  public ResponseBuilder(SolrQueryRequest req, SolrQueryResponse rsp, List<SearchComponent> components)
-  {
-    this.req = req;
-    this.rsp = rsp;
-    this.components = components;
-    this.requestInfo = SolrRequestInfo.getRequestInfo();
-  }
 
   //////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////
@@ -107,9 +101,7 @@ public class ResponseBuilder
   public int stage;  // What stage is this current request at?
 
   //The address of the Shard
-  boolean isDistrib; // is this a distributed search?
   public String[] shards;
-  public String[] slices; // the optional logical ids of the shards
   public int shards_rows = -1;
   public int shards_start = -1;
   public List<ShardRequest> outgoing;  // requests to be sent

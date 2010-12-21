@@ -25,8 +25,6 @@ import org.apache.lucene.analysis.TokenFilter;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.Tokenizer;
 
-import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper; // javadocs
-
 /**
  * An convenience subclass of Analyzer that makes it easy to implement
  * {@link TokenStream} reuse.
@@ -75,9 +73,8 @@ public abstract class ReusableAnalyzerBase extends Analyzer {
       final Reader reader) throws IOException {
     TokenStreamComponents streamChain = (TokenStreamComponents)
     getPreviousTokenStream();
-    final Reader r = initReader(reader);
-    if (streamChain == null || !streamChain.reset(r)) {
-      streamChain = createComponents(fieldName, r);
+    if (streamChain == null || !streamChain.reset(reader)) {
+      streamChain = createComponents(fieldName, reader);
       setPreviousTokenStream(streamChain);
     }
     return streamChain.getTokenStream();
@@ -96,14 +93,7 @@ public abstract class ReusableAnalyzerBase extends Analyzer {
   @Override
   public final TokenStream tokenStream(final String fieldName,
       final Reader reader) {
-    return createComponents(fieldName, initReader(reader)).getTokenStream();
-  }
-  
-  /**
-   * Override this if you want to add a CharFilter chain.
-   */
-  protected Reader initReader(Reader reader) {
-    return reader;
+    return createComponents(fieldName, reader).getTokenStream();
   }
   
   /**

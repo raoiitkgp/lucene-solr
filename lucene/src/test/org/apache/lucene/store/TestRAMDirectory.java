@@ -51,7 +51,7 @@ public class TestRAMDirectory extends LuceneTestCase {
     super.setUp();
     indexDir = new File(TEMP_DIR, "RAMDirIndex");
     
-    Directory dir = newFSDirectory(indexDir);
+    Directory dir = FSDirectory.open(indexDir);
     IndexWriter writer = new IndexWriter(dir, new IndexWriterConfig(
         TEST_VERSION_CURRENT, new MockAnalyzer()).setOpenMode(OpenMode.CREATE));
     // add some documents
@@ -68,8 +68,8 @@ public class TestRAMDirectory extends LuceneTestCase {
   
   public void testRAMDirectory () throws IOException {
     
-    Directory dir = newFSDirectory(indexDir);
-    MockDirectoryWrapper ramDir = new MockDirectoryWrapper(random, new RAMDirectory(dir));
+    Directory dir = FSDirectory.open(indexDir);
+    MockDirectoryWrapper ramDir = new MockDirectoryWrapper(new RAMDirectory(dir));
     
     // close the underlaying directory
     dir.close();
@@ -100,8 +100,8 @@ public class TestRAMDirectory extends LuceneTestCase {
   
   public void testRAMDirectorySize() throws IOException, InterruptedException {
       
-    Directory dir = newFSDirectory(indexDir);
-    final MockDirectoryWrapper ramDir = new MockDirectoryWrapper(random, new RAMDirectory(dir));
+    Directory dir = FSDirectory.open(indexDir);
+    final MockDirectoryWrapper ramDir = new MockDirectoryWrapper(new RAMDirectory(dir));
     dir.close();
     
     final IndexWriter writer = new IndexWriter(ramDir, new IndexWriterConfig(

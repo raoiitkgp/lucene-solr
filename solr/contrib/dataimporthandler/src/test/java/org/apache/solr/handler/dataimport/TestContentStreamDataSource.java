@@ -16,7 +16,9 @@
  */
 package org.apache.solr.handler.dataimport;
 
+import junit.framework.TestCase;
 import org.apache.commons.io.FileUtils;
+import org.apache.solr.SolrTestCaseJ4;
 import org.apache.solr.client.solrj.embedded.JettySolrRunner;
 import org.apache.solr.client.solrj.impl.CommonsHttpSolrServer;
 import org.apache.solr.client.solrj.request.DirectXmlRequest;
@@ -24,10 +26,11 @@ import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.params.ModifiableSolrParams;
-
+import org.apache.solr.util.AbstractSolrTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import static org.junit.Assert.*;
 
 import java.io.File;
 import java.util.List;
@@ -38,7 +41,7 @@ import java.util.List;
  * @version $Id$
  * @since solr 1.4
  */
-public class TestContentStreamDataSource extends AbstractDataImportHandlerTestCase {
+public class TestContentStreamDataSource extends SolrTestCaseJ4 {
   private static final String CONF_DIR = "." + File.separator + "solr" + File.separator + "conf" + File.separator;
   SolrInstance instance = null;
   JettySolrRunner jetty;
@@ -116,7 +119,7 @@ public class TestContentStreamDataSource extends AbstractDataImportHandlerTestCa
 
     public void setUp() throws Exception {
 
-      File home = new File(TEMP_DIR,
+      File home = new File(SolrTestCaseJ4.TEMP_DIR,
               getClass().getName() + "-" + System.currentTimeMillis());
 
 
@@ -138,7 +141,7 @@ public class TestContentStreamDataSource extends AbstractDataImportHandlerTestCa
     }
 
     public void tearDown() throws Exception {
-      recurseDelete(homeDir);
+      AbstractSolrTestCase.recurseDelete(homeDir);
     }
   }
 

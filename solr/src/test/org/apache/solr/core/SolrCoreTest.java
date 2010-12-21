@@ -17,33 +17,22 @@
 
 package org.apache.solr.core;
 
-import org.apache.solr.SolrTestCaseJ4;
 import org.apache.solr.handler.RequestHandlerBase;
 import org.apache.solr.handler.component.SpellCheckComponent;
 import org.apache.solr.handler.component.QueryComponent;
 import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.request.SolrRequestHandler;
 import org.apache.solr.response.SolrQueryResponse;
+import org.apache.solr.util.AbstractSolrTestCase;
 import org.apache.solr.util.plugin.SolrCoreAware;
-import org.junit.BeforeClass;
-import org.junit.Test;
 
 import java.util.concurrent.*;
 import java.util.*;
-public class SolrCoreTest extends SolrTestCaseJ4 {
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    initCore("solrconfig.xml", "schema.xml");
-  }
+public class SolrCoreTest extends AbstractSolrTestCase {
 
-  @Override
-  public void tearDown() throws Exception {
-    deleteCore();
-    super.tearDown();
-  }
-
-  @Test
+  public String getSchemaFile() { return "schema.xml"; }
+  public String getSolrConfigFile() { return "solrconfig.xml"; }
+  
   public void testRequestHandlerRegistry() {
     SolrCore core = h.getCore();
 
@@ -59,7 +48,6 @@ public class SolrCoreTest extends SolrTestCaseJ4 {
     assertEquals( core.getRequestHandlers().get( path ), handler2 );
   }
 
-  @Test
   public void testClose() throws Exception {
     final CoreContainer cores = h.getCoreContainer();
     SolrCore core = cores.getCore("");
@@ -67,7 +55,7 @@ public class SolrCoreTest extends SolrTestCaseJ4 {
     ClosingRequestHandler handler1 = new ClosingRequestHandler();
     handler1.inform( core );
 
-    String path = "/this/is A path /that won't be registered 2!!!!!!!!!!!";
+    String path = "/this/is A path /that won't be registered!";
     SolrRequestHandler old = core.registerRequestHandler( path, handler1 );
     assertNull( old ); // should not be anything...
     assertEquals( core.getRequestHandlers().get( path ), handler1 );
@@ -76,7 +64,6 @@ public class SolrCoreTest extends SolrTestCaseJ4 {
     assertTrue("Handler not closed", handler1.closed == true);
   }
   
-  @Test
   public void testRefCount() throws Exception {
     SolrCore core = h.getCore();
     assertTrue("Refcount != 1", core.getOpenCount() == 1);
@@ -113,7 +100,6 @@ public class SolrCoreTest extends SolrTestCaseJ4 {
   }
     
 
-  @Test
   public void testRefCountMT() throws Exception {
     SolrCore core = h.getCore();
     assertTrue("Refcount != 1", core.getOpenCount() == 1);
@@ -181,7 +167,6 @@ public class SolrCoreTest extends SolrTestCaseJ4 {
     assertTrue("Running for too long...", service.awaitTermination(60, TimeUnit.SECONDS));
   }
 
-  @Test
   public void testInfoRegistry() throws Exception {
     //TEst that SolrInfoMBeans are registered, including SearchComponents
     SolrCore core = h.getCore();

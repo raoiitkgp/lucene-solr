@@ -63,7 +63,7 @@ final class TermsHash extends InvertedDocConsumer {
   }
 
   @Override
-  public void abort() {
+  synchronized public void abort() {
     consumer.abort();
     if (nextTermsHash != null)
       nextTermsHash.abort();

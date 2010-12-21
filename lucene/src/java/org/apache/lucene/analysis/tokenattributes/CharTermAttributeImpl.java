@@ -203,8 +203,7 @@ public class CharTermAttributeImpl extends AttributeImpl implements CharTermAttr
   public Object clone() {
     CharTermAttributeImpl t = (CharTermAttributeImpl)super.clone();
     // Do a deep clone
-    t.termBuffer = new char[this.termLength];
-    System.arraycopy(this.termBuffer, 0, t.termBuffer, 0, this.termLength);
+    t.termBuffer = termBuffer.clone();
     return t;
   }
   

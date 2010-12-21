@@ -16,7 +16,6 @@
  */
 package org.apache.solr.handler.dataimport;
 
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.List;
@@ -25,11 +24,6 @@ import java.util.Map;
 
 
 public class TestThreaded extends AbstractDataImportHandlerTestCase {
-  @BeforeClass
-  public static void beforeClass() throws Exception {
-    initCore("dataimport-solrconfig.xml", "dataimport-schema.xml");
-  }
-  
   @Test
   @SuppressWarnings("unchecked")
   public void testCompositePk_FullImport() throws Exception {
@@ -50,14 +44,23 @@ public class TestThreaded extends AbstractDataImportHandlerTestCase {
     MockDataSource.setIterator("select * from y where y.A=3", childRow.iterator());
     MockDataSource.setIterator("select * from y where y.A=4", childRow.iterator());
 
-    runFullImport(dataConfig);
+    super.runFullImport(dataConfig);
 
     assertQ(req("id:1"), "//*[@numFound='1']");
     assertQ(req("*:*"), "//*[@numFound='4']");
     assertQ(req("desc:hello"), "//*[@numFound='4']");
   }
 
-  private static String dataConfig = "<dataConfig>\n"
+    @Override
+  public String getSchemaFile() {
+    return "dataimport-schema.xml";
+  }
+
+  @Override
+  public String getSolrConfigFile() {
+    return "dataimport-solrconfig.xml";
+  }
+   private static String dataConfig = "<dataConfig>\n"
           +"<dataSource  type=\"MockDataSource\"/>\n"
           + "       <document>\n"
           + "               <entity name=\"x\" threads=\"2\" query=\"select * from x\" deletedPkQuery=\"select id from x where last_modified > NOW AND deleted='true'\" deltaQuery=\"select id from x where last_modified > NOW\">\n"

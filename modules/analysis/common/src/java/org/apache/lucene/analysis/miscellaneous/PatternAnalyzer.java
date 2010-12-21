@@ -62,7 +62,8 @@ import org.apache.lucene.util.Version;
  *     pat.tokenStream("content", "James is running round in the woods"), 
  *     "English"));
  * </pre>
- * @deprecated (4.0) use the pattern-based analysis in the analysis/pattern package instead.
+ * @deprecated use the pattern-based analysis in the analysis/pattern package instead.
+ * This analyzer will be removed in a future release (4.1)
  */
 @Deprecated
 public final class PatternAnalyzer extends Analyzer {
@@ -145,7 +146,7 @@ public final class PatternAnalyzer extends Analyzer {
   /**
    * Constructs a new instance with the given parameters.
    * 
-   * @param matchVersion currently does nothing
+   * @param matchVersion If >= {@link Version#LUCENE_29}, StopFilter.enablePositionIncrement is set to true
    * @param pattern
    *            a regular expression delimiting tokens
    * @param toLowerCase

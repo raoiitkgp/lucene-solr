@@ -42,6 +42,9 @@ import org.apache.lucene.util.MultiBits;
  * The SegmentMerger class combines two or more Segments, represented by an IndexReader ({@link #add},
  * into a single Segment.  After adding the appropriate readers, call the merge method to combine the 
  * segments.
+ *<P> 
+ * If the compoundFile flag is set, then the segments will be merged into a compound file.
+ *   
  * 
  * @see #merge
  * @see #add
@@ -95,9 +98,9 @@ final class SegmentMerger {
     }
     this.termIndexInterval = termIndexInterval;
   }
-
-  public FieldInfos fieldInfos() {
-    return fieldInfos;
+  
+  boolean hasProx() {
+    return fieldInfos.hasProx();
   }
 
   /**
@@ -105,7 +108,16 @@ final class SegmentMerger {
    * @param reader
    */
   final void add(IndexReader reader) {
-    ReaderUtil.gatherSubReaders(readers, reader);
+    readers.add(reader);
+  }
+
+  /**
+   * 
+   * @param i The index of the reader to return
+   * @return The ith reader to be merged
+   */
+  final IndexReader segmentReader(int i) {
+    return readers.get(i);
   }
 
   /**
@@ -142,14 +154,27 @@ final class SegmentMerger {
     mergeTerms();
     mergeNorms();
 
-    if (mergeDocStores && fieldInfos.hasVectors()) {
+    if (mergeDocStores && fieldInfos.hasVectors())
       mergeVectors();
-    }
 
     return mergedDocs;
   }
 
-  final Collection<String> getMergedFiles(final SegmentInfo info) throws IOException {
+  /**
+   * close all IndexReaders that have been added.
+   * Should not be called before merge().
+   * @throws IOException
+   */
+  final void closeReaders() throws IOException {
+    for (final IndexReader reader : readers) {
+      reader.close();
+    }
+  }
+
+  final List<String> createCompoundFile(String fileName, final SegmentInfo info)
+          throws IOException {
+    CompoundFileWriter cfsWriter = new CompoundFileWriter(directory, fileName, checkAbort);
+
     Set<String> fileSet = new HashSet<String>();
 
     // Basic files
@@ -159,7 +184,7 @@ final class SegmentMerger {
         fileSet.add(IndexFileNames.segmentFileName(segment, "", ext));
     }
 
-    segmentWriteState.segmentCodecs.files(directory, info, fileSet);
+    codec.files(directory, info, fileSet);
     
     // Fieldable norm files
     int numFIs = fieldInfos.size();
@@ -178,26 +203,18 @@ final class SegmentMerger {
       }
     }
 
-    return fileSet;
-  }
-
-  final Collection<String> createCompoundFile(String fileName, final SegmentInfo info)
-          throws IOException {
-
     // Now merge all added files
-    Collection<String> files = getMergedFiles(info);
-    CompoundFileWriter cfsWriter = new CompoundFileWriter(directory, fileName, checkAbort);
-    for (String file : files) {
+    for (String file : fileSet) {
       cfsWriter.addFile(file);
     }
     
     // Perform the merge
     cfsWriter.close();
    
-    return files;
+    return new ArrayList<String>(fileSet);
   }
 
-  private static void addIndexed(IndexReader reader, FieldInfos fInfos,
+  private void addIndexed(IndexReader reader, FieldInfos fInfos,
       Collection<String> names, boolean storeTermVectors,
       boolean storePositionWithTermVector, boolean storeOffsetWithTermVector,
       boolean storePayloads, boolean omitTFAndPositions)
@@ -261,7 +278,7 @@ final class SegmentMerger {
       final SegmentReader sr = (SegmentReader) readers.get(readers.size()-1);
       fieldInfos = (FieldInfos) sr.core.fieldInfos.clone();
     } else {
-      fieldInfos = new FieldInfos();// merge field names
+      fieldInfos = new FieldInfos();		  // merge field names
     }
 
     for (IndexReader reader : readers) {
@@ -287,7 +304,6 @@ final class SegmentMerger {
         fieldInfos.add(reader.getFieldNames(FieldOption.UNINDEXED), false);
       }
     }
-    final SegmentCodecs codecInfo = SegmentCodecs.build(fieldInfos, this.codecs);
     fieldInfos.write(directory, segment + ".fnm");
 
     int docCount = 0;
@@ -341,8 +357,8 @@ final class SegmentMerger {
       }
     }
 
-    segmentWriteState = new SegmentWriteState(null, directory, segment, fieldInfos, null, docCount, 0, termIndexInterval, codecInfo);
-    
+    segmentWriteState = new SegmentWriteState(null, directory, segment, fieldInfos, null, docCount, 0, termIndexInterval, codecs);
+
     return docCount;
   }
 
@@ -351,7 +367,7 @@ final class SegmentMerger {
     throws IOException, MergeAbortedException, CorruptIndexException {
     int docCount = 0;
     final int maxDoc = reader.maxDoc();
-    final Bits delDocs = reader.getDeletedDocs();
+    final Bits delDocs = MultiFields.getDeletedDocs(reader);
     if (matchingFieldsReader != null) {
       // We can bulk-copy because the fieldInfos are "congruent"
       for (int j = 0; j < maxDoc;) {
@@ -435,7 +451,7 @@ final class SegmentMerger {
         final SegmentReader matchingSegmentReader = matchingSegmentReaders[idx++];
         TermVectorsReader matchingVectorsReader = null;
         if (matchingSegmentReader != null) {
-          TermVectorsReader vectorsReader = matchingSegmentReader.getTermVectorsReader();
+          TermVectorsReader vectorsReader = matchingSegmentReader.getTermVectorsReaderOrig();
 
           // If the TV* files are an older format then they cannot read raw docs:
           if (vectorsReader != null && vectorsReader.canReadRawDocs()) {
@@ -470,7 +486,7 @@ final class SegmentMerger {
                                         final IndexReader reader)
     throws IOException, MergeAbortedException {
     final int maxDoc = reader.maxDoc();
-    final Bits delDocs = reader.getDeletedDocs();
+    final Bits delDocs = MultiFields.getDeletedDocs(reader);
     if (matchingVectorsReader != null) {
       // We can bulk-copy because the fieldInfos are "congruent"
       for (int docNum = 0; docNum < maxDoc;) {
@@ -538,41 +554,47 @@ final class SegmentMerger {
     }
   }
 
-  SegmentCodecs getSegmentCodecs() {
-    assert segmentWriteState != null;
-    return segmentWriteState.segmentCodecs;
+  Codec getCodec() {
+    return codec;
   }
 
   private final void mergeTerms() throws CorruptIndexException, IOException {
 
     // Let CodecProvider decide which codec will be used to write
     // the new segment:
+    codec = codecs.getWriter(segmentWriteState);
     
     int docBase = 0;
 
     final List<Fields> fields = new ArrayList<Fields>();
+    final List<IndexReader> subReaders = new ArrayList<IndexReader>();
     final List<ReaderUtil.Slice> slices = new ArrayList<ReaderUtil.Slice>();
     final List<Bits> bits = new ArrayList<Bits>();
     final List<Integer> bitsStarts = new ArrayList<Integer>();
 
-    for(IndexReader r : readers) {
-      final Fields f = r.fields();
-      final int maxDoc = r.maxDoc();
-      if (f != null) {
-        slices.add(new ReaderUtil.Slice(docBase, maxDoc, fields.size()));
-        fields.add(f);
-        bits.add(r.getDeletedDocs());
-        bitsStarts.add(docBase);
-      }
-      docBase += maxDoc;
+    final int numReaders = readers.size();
+    for(int i=0;i<numReaders;i++) {
+      docBase = new ReaderUtil.Gather(readers.get(i)) {
+          @Override
+          protected void add(int base, IndexReader r) throws IOException {
+            final Fields f = r.fields();
+            if (f != null) {
+              subReaders.add(r);
+              fields.add(f);
+              slices.add(new ReaderUtil.Slice(base, r.maxDoc(), fields.size()-1));
+              bits.add(r.getDeletedDocs());
+              bitsStarts.add(base);
+            }
+          }
+        }.run(docBase);
     }
 
     bitsStarts.add(docBase);
 
     // we may gather more readers than mergeState.readerCount
     mergeState = new MergeState();
-    mergeState.readers = readers;
-    mergeState.readerCount = readers.size();
+    mergeState.readers = subReaders;
+    mergeState.readerCount = subReaders.size();
     mergeState.fieldInfos = fieldInfos;
     mergeState.mergedDocCount = mergedDocs;
     
@@ -587,9 +609,13 @@ final class SegmentMerger {
     docBase = 0;
     int inputDocBase = 0;
 
+    final int[] starts = new int[mergeState.readerCount+1];
+
     for(int i=0;i<mergeState.readerCount;i++) {
 
-      final IndexReader reader = readers.get(i);
+      final IndexReader reader = subReaders.get(i);
+
+      starts[i] = inputDocBase;
 
       mergeState.delCounts[i] = reader.numDeletedDocs();
       mergeState.docBase[i] = docBase;
@@ -597,7 +623,7 @@ final class SegmentMerger {
       inputDocBase += reader.maxDoc();
       if (mergeState.delCounts[i] != 0) {
         int delCount = 0;
-        final Bits delDocs = reader.getDeletedDocs();
+        final Bits delDocs = MultiFields.getDeletedDocs(reader);
         assert delDocs != null;
         final int maxDoc = reader.maxDoc();
         final int[] docMap = mergeState.docMaps[i] = new int[maxDoc];
@@ -617,7 +643,8 @@ final class SegmentMerger {
         mergeState.dirPayloadProcessor[i] = payloadProcessorProvider.getDirProcessor(reader.directory());
       }
     }
-    codec = segmentWriteState.segmentCodecs.codec();
+    starts[mergeState.readerCount] = inputDocBase;
+
     final FieldsConsumer consumer = codec.fieldsConsumer(segmentWriteState);
 
     // NOTE: this is silly, yet, necessary -- we create a
@@ -646,27 +673,24 @@ final class SegmentMerger {
   }
   
   private void mergeNorms() throws IOException {
-    // get needed buffer size by finding the largest segment
-    int bufferSize = 0;
-    for (IndexReader reader : readers) {
-      bufferSize = Math.max(bufferSize, reader.maxDoc());
-    }
-    
     byte[] normBuffer = null;
     IndexOutput output = null;
     try {
-      for (int i = 0, numFieldInfos = fieldInfos.size(); i < numFieldInfos; i++) {
-        final FieldInfo fi = fieldInfos.fieldInfo(i);
+      int numFieldInfos = fieldInfos.size();
+      for (int i = 0; i < numFieldInfos; i++) {
+        FieldInfo fi = fieldInfos.fieldInfo(i);
         if (fi.isIndexed && !fi.omitNorms) {
           if (output == null) { 
             output = directory.createOutput(IndexFileNames.segmentFileName(segment, "", IndexFileNames.NORMS_EXTENSION));
             output.writeBytes(NORMS_HEADER,NORMS_HEADER.length);
           }
-          if (normBuffer == null) {
-            normBuffer = new byte[bufferSize];
-          }
-          for (IndexReader reader : readers) {
-            final int maxDoc = reader.maxDoc();
+          for ( IndexReader reader : readers) {
+            int maxDoc = reader.maxDoc();
+            final Bits delDocs = MultiFields.getDeletedDocs(reader);
+            if (normBuffer == null || normBuffer.length < maxDoc) {
+              // the buffer is too small for the current segment
+              normBuffer = new byte[maxDoc];
+            }
             reader.norms(fi.name, normBuffer, 0);
             if (!reader.hasDeletions()) {
               //optimized case for segments without deleted docs
@@ -674,7 +698,6 @@ final class SegmentMerger {
             } else {
               // this segment has deleted docs, so we have to
               // check for every doc if it is deleted or not
-              final Bits delDocs = reader.getDeletedDocs();
               for (int k = 0; k < maxDoc; k++) {
                 if (!delDocs.get(k)) {
                   output.writeByte(normBuffer[k]);

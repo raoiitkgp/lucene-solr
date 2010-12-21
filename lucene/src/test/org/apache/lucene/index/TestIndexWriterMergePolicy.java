@@ -24,6 +24,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
 import org.apache.lucene.store.Directory;
+import org.apache.lucene.util._TestUtil;
 
 import org.apache.lucene.util.LuceneTestCase;
 
@@ -100,12 +101,9 @@ public class TestIndexWriterMergePolicy extends LuceneTestCase {
   public void testMergeFactorChange() throws IOException {
     Directory dir = newDirectory();
 
-    IndexWriter writer = new IndexWriter(
-        dir,
-        newIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer()).
-            setMaxBufferedDocs(10).
-            setMergePolicy(newLogMergePolicy())
-    );
+    IndexWriter writer = new IndexWriter(dir, newIndexWriterConfig(
+        TEST_VERSION_CURRENT, new MockAnalyzer())
+        .setMaxBufferedDocs(10).setMergePolicy(new LogDocMergePolicy()));
 
     for (int i = 0; i < 250; i++) {
       addDoc(writer);
@@ -166,7 +164,7 @@ public class TestIndexWriterMergePolicy extends LuceneTestCase {
       addDoc(writer);
     }
     writer.commit();
-    writer.waitForMerges();
+    ((ConcurrentMergeScheduler) writer.getConfig().getMergeScheduler()).sync();
     writer.commit();
     checkInvariants(writer);
 
@@ -205,7 +203,7 @@ public class TestIndexWriterMergePolicy extends LuceneTestCase {
       addDoc(writer);
     }
     writer.commit();
-    writer.waitForMerges();
+    ((ConcurrentMergeScheduler) writer.getConfig().getMergeScheduler()).sync();
     writer.commit();
     checkInvariants(writer);
     assertEquals(10, writer.maxDoc());
@@ -221,7 +219,7 @@ public class TestIndexWriterMergePolicy extends LuceneTestCase {
   }
 
   private void checkInvariants(IndexWriter writer) throws IOException {
-    writer.waitForMerges();
+    _TestUtil.syncConcurrentMerges(writer);
     int maxBufferedDocs = writer.getConfig().getMaxBufferedDocs();
     int mergeFactor = ((LogMergePolicy) writer.getConfig().getMergePolicy()).getMergeFactor();
     int maxMergeDocs = ((LogMergePolicy) writer.getConfig().getMergePolicy()).getMaxMergeDocs();
@@ -255,5 +253,25 @@ public class TestIndexWriterMergePolicy extends LuceneTestCase {
     if (upperBound * mergeFactor <= maxMergeDocs) {
       assertTrue(numSegments < mergeFactor);
     }
+
+    String[] files = writer.getDirectory().listAll();
+    int segmentCfsCount = 0;
+    for (int i = 0; i < files.length; i++) {
+      if (files[i].endsWith(".cfs")) {
+        segmentCfsCount++;
+      }
+    }
+    assertEquals(segmentCount, segmentCfsCount);
   }
+
+  /*
+  private void printSegmentDocCounts(IndexWriter writer) {
+    int segmentCount = writer.getSegmentCount();
+    System.out.println("" + segmentCount + " segments total");
+    for (int i = 0; i < segmentCount; i++) {
+      System.out.println("  segment " + i + " has " + writer.getDocCount(i)
+          + " docs");
+    }
+  }
+  */
 }

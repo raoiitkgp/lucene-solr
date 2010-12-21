@@ -79,6 +79,9 @@ public final class IndexWriterConfig implements Cloneable {
    */
   public static long WRITE_LOCK_TIMEOUT = 1000;
 
+  /** Default {@link CodecProvider}. */
+  public final static CodecProvider DEFAULT_CODEC_PROVIDER = CodecProvider.getDefault();
+
   /** The maximum number of simultaneous threads that may be
    *  indexing documents at once in IndexWriter; if more
    *  than this many threads arrive they will wait for
@@ -155,7 +158,7 @@ public final class IndexWriterConfig implements Cloneable {
     maxBufferedDocs = DEFAULT_MAX_BUFFERED_DOCS;
     indexingChain = DocumentsWriter.defaultIndexingChain;
     mergedSegmentWarmer = null;
-    codecProvider = CodecProvider.getDefault();
+    codecProvider = DEFAULT_CODEC_PROVIDER;
     mergePolicy = new LogByteSizeMergePolicy();
     maxThreadStates = DEFAULT_MAX_THREAD_STATES;
     readerPooling = DEFAULT_READER_POOLING;
@@ -609,7 +612,7 @@ public final class IndexWriterConfig implements Cloneable {
     sb.append("matchVersion=").append(matchVersion).append("\n");
     sb.append("analyzer=").append(analyzer == null ? "null" : analyzer.getClass().getName()).append("\n");
     sb.append("delPolicy=").append(delPolicy.getClass().getName()).append("\n");
-    sb.append("commit=").append(commit == null ? "null" : commit).append("\n");
+    sb.append("commit=").append(commit == null ? "null" : commit.getClass().getName()).append("\n");
     sb.append("openMode=").append(openMode).append("\n");
     sb.append("maxFieldLength=").append(maxFieldLength).append("\n");
     sb.append("similarity=").append(similarity.getClass().getName()).append("\n");

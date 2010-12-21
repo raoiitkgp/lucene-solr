@@ -41,17 +41,18 @@ public class TestSubScorerFreqs extends LuceneTestCase {
   @BeforeClass
   public static void makeIndex() throws Exception {
     dir = new RAMDirectory();
+    Random random = newStaticRandom(TestSubScorerFreqs.class);
     RandomIndexWriter w = new RandomIndexWriter(
         random, dir);
     // make sure we have more than one segment occationally
     for (int i = 0; i < 31 * RANDOM_MULTIPLIER; i++) {
       Document doc = new Document();
-      doc.add(newField("f", "a b c d b c d c d d", Field.Store.NO,
+      doc.add(newField(random, "f", "a b c d b c d c d d", Field.Store.NO,
           Field.Index.ANALYZED));
       w.addDocument(doc);
 
       doc = new Document();
-      doc.add(newField("f", "a b c d", Field.Store.NO, Field.Index.ANALYZED));
+      doc.add(newField(random, "f", "a b c d", Field.Store.NO, Field.Index.ANALYZED));
       w.addDocument(doc);
     }
 
@@ -63,9 +64,7 @@ public class TestSubScorerFreqs extends LuceneTestCase {
   public static void finish() throws Exception {
     s.getIndexReader().close();
     s.close();
-    s = null;
     dir.close();
-    dir = null;
   }
 
   private static class CountingCollector extends Collector {

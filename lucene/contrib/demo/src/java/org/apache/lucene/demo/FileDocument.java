@@ -18,9 +18,7 @@ package org.apache.lucene.demo;
  */
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileReader;
-import java.io.InputStreamReader;
 
 import org.apache.lucene.document.DateTools;
 import org.apache.lucene.document.Document;
@@ -42,7 +40,7 @@ public class FileDocument {
     Reader field;
     */
   public static Document Document(File f)
-       throws java.io.IOException {
+       throws java.io.FileNotFoundException {
 	 
     // make a new, empty document
     Document doc = new Document();
@@ -60,9 +58,9 @@ public class FileDocument {
 
     // Add the contents of the file to a field named "contents".  Specify a Reader,
     // so that the text of the file is tokenized and indexed, but not stored.
-    // Note that FileReader expects the file to be in UTF-8 encoding.
+    // Note that FileReader expects the file to be in the system's default encoding.
     // If that's not the case searching for special characters will fail.
-    doc.add(new Field("contents", new InputStreamReader(new FileInputStream(f), "UTF-8")));
+    doc.add(new Field("contents", new FileReader(f)));
 
     // return the document
     return doc;

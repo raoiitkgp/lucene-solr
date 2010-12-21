@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * <p>
- * {@link Transformer} instance which creates {@link Date} instances out of {@link String}s.
+ * Transformer instance which creates Date instances out of Strings.
  * </p>
  * <p/>
  * <p>

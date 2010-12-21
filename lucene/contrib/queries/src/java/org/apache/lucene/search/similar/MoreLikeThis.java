@@ -520,6 +520,7 @@ public final class MoreLikeThis {
 	 * 
 	 * @param stopWords set of stopwords, if null it means to allow stop words
 	 *
+	 * @see org.apache.lucene.analysis.StopFilter#makeStopSet StopFilter.makeStopSet()
 	 * @see #getStopWords	 
 	 */
 	public void setStopWords(Set<?> stopWords) {

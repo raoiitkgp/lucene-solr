@@ -35,7 +35,7 @@ import org.apache.lucene.search.DocIdSetIterator;
  * @version $Id$
  */
 public class TestDocSet extends LuceneTestCase {
-  Random rand = random;
+  Random rand = new Random();
   float loadfactor;
 
   public OpenBitSet getRandomSet(int sz, int bitsToSet) {

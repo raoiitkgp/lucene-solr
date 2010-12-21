@@ -20,7 +20,6 @@ package org.apache.solr.core;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.solr.SolrTestCaseJ4;
 import org.apache.solr.handler.admin.ShowFileRequestHandler;
-import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.search.SolrIndexReader;
 import org.apache.solr.search.SolrIndexSearcher;
 import org.apache.solr.update.DirectUpdateHandler2;
@@ -130,12 +129,10 @@ public class TestConfig extends SolrTestCaseJ4 {
         return writer;
       }
     }
-
-    ExposeWriterHandler duh = new ExposeWriterHandler();
-    IndexWriter writer = duh.getWriter();
-    int interval = writer.getConfig().getTermIndexInterval();
+    
+    IndexWriter writer = new ExposeWriterHandler().getWriter();
+    int interval = writer.getTermIndexInterval();
     assertEquals(256, interval);
-    duh.close();
   }
 
   @Test
@@ -143,9 +140,9 @@ public class TestConfig extends SolrTestCaseJ4 {
     IndexReaderFactory irf = h.getCore().getIndexReaderFactory();
     StandardIndexReaderFactory sirf = (StandardIndexReaderFactory) irf;
     assertEquals(12, sirf.termInfosIndexDivisor);
-    SolrQueryRequest req = req();
-    assertEquals(12, req.getSearcher().getReader().getTermInfosIndexDivisor());
-    req.close();
+    RefCounted<SolrIndexSearcher> refCounted = h.getCore().getSearcher();
+    SolrIndexReader solrReader = refCounted.get().getReader();
+    assertEquals(12, solrReader.getTermInfosIndexDivisor());
   }
 
 

@@ -33,10 +33,6 @@ class DisjunctionMaxScorer extends Scorer {
   private final float tieBreakerMultiplier;
   private int doc = -1;
 
-  /* Used when scoring currently matching doc. */
-  private float scoreSum;
-  private float scoreMax;
-
   /**
    * Creates a new instance of DisjunctionMaxScorer
    * 
@@ -94,21 +90,21 @@ class DisjunctionMaxScorer extends Scorer {
   @Override
   public float score() throws IOException {
     int doc = subScorers[0].docID();
-    scoreSum = scoreMax = subScorers[0].score();
+    float[] sum = { subScorers[0].score() }, max = { sum[0] };
     int size = numScorers;
-    scoreAll(1, size, doc);
-    scoreAll(2, size, doc);
-    return scoreMax + (scoreSum - scoreMax) * tieBreakerMultiplier;
+    scoreAll(1, size, doc, sum, max);
+    scoreAll(2, size, doc, sum, max);
+    return max[0] + (sum[0] - max[0]) * tieBreakerMultiplier;
   }
 
   // Recursively iterate all subScorers that generated last doc computing sum and max
-  private void scoreAll(int root, int size, int doc) throws IOException {
+  private void scoreAll(int root, int size, int doc, float[] sum, float[] max) throws IOException {
     if (root < size && subScorers[root].docID() == doc) {
       float sub = subScorers[root].score();
-      scoreSum += sub;
-      scoreMax = Math.max(scoreMax, sub);
-      scoreAll((root<<1)+1, size, doc);
-      scoreAll((root<<1)+2, size, doc);
+      sum[0] += sub;
+      max[0] = Math.max(max[0], sub);
+      scoreAll((root<<1)+1, size, doc, sum, max);
+      scoreAll((root<<1)+2, size, doc, sum, max);
     }
   }
 

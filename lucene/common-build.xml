@@ -40,8 +40,7 @@
 
   <property name="name" value="${ant.project.name}"/>
   <property name="Name" value="Lucene"/>
-  <property name="dev.version" value="4.0-SNAPSHOT"/>
-  <property name="tests.luceneMatchVersion" value="4.0"/>
+  <property name="dev.version" value="4.0-dev"/>
   <property name="version" value="${dev.version}"/>
   <property name="spec.version" value="${version}"/>	
   <property name="year" value="2000-${current.year}"/>
@@ -64,16 +63,12 @@
     </or>
   </condition>
   <property name="tests.multiplier" value="1" />
-  <property name="tests.codec" value="randomPerField" />
+  <property name="tests.codec" value="random" />
   <property name="tests.locale" value="random" />
   <property name="tests.timezone" value="random" />
   <property name="tests.directory" value="random" />
-  <property name="tests.linedocsfile" value="europarl.lines.txt.gz" />
   <property name="tests.iter" value="1" />
   <property name="tests.seed" value="random" />
-  <property name="tests.userdir" value="."/>
-  <property name="tests.loggingfile" value="/dev/null"/>
-  <property name="tests.nightly" value="false" />
     
   <property name="javac.deprecation" value="off"/>
   <property name="javac.debug" value="on"/>
@@ -103,7 +98,6 @@
   <property name="build.encoding" value="utf-8"/>
 
   <property name="src.dir" location="src/java"/>
-  <property name="tests.src.dir" location="src/test"/>
   <property name="build.dir" location="build"/>
   <property name="dist.dir" location="dist"/>
   <property name="maven.dist.dir" location="dist/maven"/>
@@ -136,11 +130,7 @@
   <property name="junit.reports" location="${build.dir}/test/reports"/>
   <property name="junit.reports.backwards" location="${build.dir.backwards}/test/reports"/>
   <property name="junit.excludes" value=""/>
-  <condition property="junit.details.formatter" 
-      value="org.apache.tools.ant.taskdefs.optional.junit.BriefJUnitResultFormatter"
-      else="org.apache.lucene.util.LuceneJUnitResultFormatter">
-    <isset property="tests.sequential"/>
-  </condition>
+  <property name="junit.details.formatter" value="org.apache.lucene.util.LuceneJUnitResultFormatter"/>
   <property name="junit.parallel.selector" value="org.apache.lucene.util.LuceneJUnitDividingSelector"/>
 
   <property name="manifest.file" location="${common.dir}/build/MANIFEST.MF"/>
@@ -193,7 +183,7 @@
   -->
   <target name="javacc-uptodate-check">
     <uptodate property="javacc.files.uptodate">
-      <srcfiles dir="${src.dir}" includes="**/*.jj" />
+      <srcfiles dir="src/java" includes="**/*.jj" />
       <mapper type="glob" from="*.jj" to="*.java"/>
     </uptodate>
   </target>
@@ -211,7 +201,7 @@
 
   <target name="jflex-uptodate-check">
     <uptodate property="jflex.files.uptodate">
-      <srcfiles dir="${src.dir}" includes="**/*.jflex" />
+      <srcfiles dir="src/java" includes="**/*.jflex" />
       <mapper type="glob" from="*.jflex" to="*.java"/>
     </uptodate>
   </target>
@@ -281,7 +271,7 @@
   <target name="compile-core" depends="init, clover"
           description="Compiles core classes">
     <compile
-      srcdir="${src.dir}"
+      srcdir="src/java"
       destdir="${build.dir}/classes/java">
       <classpath refid="classpath"/>
     </compile>
@@ -392,7 +382,7 @@
   </macrodef>
 
   <target name="compile-test" depends="compile-core">
-  	<compile-test-macro srcdir="${tests.src.dir}" destdir="${build.dir}/classes/test"
+  	<compile-test-macro srcdir="src/test" destdir="${build.dir}/classes/test"
   						test.classpath="test.classpath"/>
   </target>
 
@@ -423,7 +413,7 @@
   <macrodef name="test-macro" description="Executes junit tests.">
   	<attribute name="junit.output.dir" default="${junit.output.dir}"/>
   	<attribute name="junit.classpath" default="junit.classpath"/>
-  	<attribute name="dataDir" default="${tests.src.dir}"/>
+  	<attribute name="dataDir" default="src/test"/>
   	<attribute name="tempDir" default="${build.dir}/test"/>
   	<attribute name="threadNum" default="1"/>
   	<attribute name="threadTotal" default="1"/>
@@ -441,11 +431,10 @@
 	    -->
     	<touch file="@{tempDir}/@{threadNum}/quiet.ant" verbose="false" mkdirs="true"/>
 	    <junit printsummary="off" haltonfailure="no" maxmemory="512M" tempdir="@{tempDir}/@{threadNum}"
-	      errorProperty="tests.failed" failureProperty="tests.failed" forkmode="perBatch" dir="${tests.userdir}">
+	      errorProperty="tests.failed" failureProperty="tests.failed" forkmode="perBatch" dir=".">
 	      <classpath refid="@{junit.classpath}"/>
 	      <assertions>
 	        <enable package="org.apache.lucene"/>
-	        <enable package="org.apache.solr"/>
 	      </assertions>
 	      
 	      <jvmarg line="${args}"/>
@@ -460,19 +449,11 @@
 	      <sysproperty key="tests.timezone" value="${tests.timezone}"/>
               <!-- set the directory tests should run with -->
               <sysproperty key="tests.directory" value="${tests.directory}"/>
-              <!-- set the line file source for oal.util.LineFileDocs -->
-              <sysproperty key="tests.linedocsfile" value="${tests.linedocsfile}"/>
               <!-- set the number of times tests should run -->
               <sysproperty key="tests.iter" value="${tests.iter}"/>
               <!-- set the test seed -->
               <sysproperty key="tests.seed" value="${tests.seed}"/>
-              <!-- set the Version that tests should run against -->
-              <sysproperty key="tests.luceneMatchVersion" value="${tests.luceneMatchVersion}"/>
-              <!-- logging config file -->
-              <sysproperty key="java.util.logging.config.file" value="${tests.loggingfile}"/>
-          <!-- set whether or not nightly tests should run -->
-          <sysproperty key="tests.nightly" value="${tests.nightly}"/>
-
+	
 	      <!-- TODO: create propertyset for test properties, so each project can have its own set -->
               <sysproperty key="tests.multiplier" value="${tests.multiplier}"/>
 	      <sysproperty key="tempDir" file="@{tempDir}/@{threadNum}"/>
@@ -480,7 +461,6 @@
 	      <sysproperty key="lucene.version" value="${dev.version}"/>
               
               <sysproperty key="testmethod" value="${testmethod}"/>
-              <sysproperty key="jetty.testMode" value="1"/>
 	    	
 	      <formatter type="xml"/>
 	      <formatter classname="${junit.details.formatter}" usefile="false"/>
@@ -551,10 +531,10 @@
     <taskdef resource="cloverlib.xml"/>
     <mkdir dir="${clover.db.dir}"/>
     <clover-setup initString="${clover.db.dir}/lucene_coverage.db" encoding="${build.encoding}">
-      <fileset dir="${src.dir}">
+      <fileset dir="src/java">
         <include name="org/apache/**/*.java" />
       </fileset>
-      <testsources dir="${tests.src.dir}">
+      <testsources dir="src/test">
         <include name="org/apache/**/*.java" />
       </testsources>
     </clover-setup>
@@ -584,7 +564,7 @@
     <fileset dir="contrib" id="clover.contrib.test.src.files">
       <include name="**/test/**/*.java"/>
     </fileset>
-    <fileset dir="${tests.src.dir}" id="clover.test.src.files">
+    <fileset dir="src/test" id="clover.test.src.files">
       <include name="**/*.java" />
     </fileset>
     <fileset dir="${build.dir}" id="clover.test.result.files">
@@ -666,7 +646,7 @@
         <!-- <compilerarg line="-Xmaxwarns 10000000"/>
         <compilerarg line="-Xmaxerrs 10000000"/> -->
         <!-- for generics in Java 1.5: -->
-        <compilerarg line="-Xlint -Xlint:-deprecation -Xlint:-serial"/>
+        <!--<compilerarg line="-Xlint:unchecked"/>-->
       </javac>
     </sequential>
   </macrodef>
@@ -697,7 +677,7 @@
   	<attribute name="title" default="${Name} ${version} API"/>
     <sequential>
       <javadoc
-          overview="${src.dir}/overview.html"
+          overview="src/java/overview.html"
           packagenames="org.apache.lucene.*"
           destdir="@{destdir}"
           access="${javadoc.access}"

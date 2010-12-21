@@ -16,6 +16,8 @@
  */
 package org.apache.solr.handler.dataimport;
 
+import org.apache.solr.SolrTestCaseJ4;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.text.SimpleDateFormat;
@@ -29,37 +31,40 @@ import java.util.*;
  * @version $Id$
  * @since solr 1.3
  */
-public class TestDateFormatTransformer extends AbstractDataImportHandlerTestCase {
+public class TestDateFormatTransformer extends SolrTestCaseJ4 {
 
   @Test
   @SuppressWarnings("unchecked")
   public void testTransformRow_SingleRow() throws Exception {
     List fields = new ArrayList();
-    fields.add(createMap(DataImporter.COLUMN, "lastModified"));
-    fields.add(createMap(DataImporter.COLUMN,
+    fields.add(AbstractDataImportHandlerTestCase.createMap(DataImporter.COLUMN,
+            "lastModified"));
+    fields.add(AbstractDataImportHandlerTestCase.createMap(DataImporter.COLUMN,
             "dateAdded", RegexTransformer.SRC_COL_NAME, "lastModified",
             DateFormatTransformer.DATE_TIME_FMT, "MM/dd/yyyy"));
 
     SimpleDateFormat format = new SimpleDateFormat("MM/dd/yyyy");
     Date now = format.parse(format.format(new Date()));
 
-    Map row = createMap("lastModified", format.format(now));
+    Map row = AbstractDataImportHandlerTestCase.createMap("lastModified", format
+            .format(now));
 
     VariableResolverImpl resolver = new VariableResolverImpl();
     resolver.addNamespace("e", row);
 
-    Context context = getContext(null, resolver,
+    Context context = AbstractDataImportHandlerTestCase.getContext(null, resolver,
             null, Context.FULL_DUMP, fields, null);
     new DateFormatTransformer().transformRow(row, context);
-    assertEquals(now, row.get("dateAdded"));
+    Assert.assertEquals(now, row.get("dateAdded"));
   }
 
   @Test
   @SuppressWarnings("unchecked")
   public void testTransformRow_MultipleRows() throws Exception {
     List fields = new ArrayList();
-    fields.add(createMap(DataImporter.COLUMN, "lastModified"));
-    fields.add(createMap(DataImporter.COLUMN,
+    fields.add(AbstractDataImportHandlerTestCase.createMap(DataImporter.COLUMN,
+            "lastModified"));
+    fields.add(AbstractDataImportHandlerTestCase.createMap(DataImporter.COLUMN,
             "dateAdded", RegexTransformer.SRC_COL_NAME, "lastModified",
             DateFormatTransformer.DATE_TIME_FMT, "MM/dd/yyyy hh:mm:ss.SSS"));
 
@@ -76,13 +81,13 @@ public class TestDateFormatTransformer extends AbstractDataImportHandlerTestCase
     VariableResolverImpl resolver = new VariableResolverImpl();
     resolver.addNamespace("e", row);
 
-    Context context = getContext(null, resolver,
+    Context context = AbstractDataImportHandlerTestCase.getContext(null, resolver,
             null, Context.FULL_DUMP, fields, null);
     new DateFormatTransformer().transformRow(row, context);
     List output = new ArrayList();
     output.add(now1);
     output.add(now2);
-    assertEquals(output, row.get("dateAdded"));
+    Assert.assertEquals(output, row.get("dateAdded"));
   }
 
 }

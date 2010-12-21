@@ -23,9 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.junit.Before;
-import org.junit.BeforeClass;
-
 /**
  * Tests exception handling during imports in DataImportHandler
  *
@@ -34,35 +31,23 @@ import org.junit.BeforeClass;
  */
 public class TestErrorHandling extends AbstractDataImportHandlerTestCase {
 
-  @BeforeClass
-  public static void beforeClass() throws Exception {
-    initCore("dataimport-solrconfig.xml", "dataimport-schema.xml");
-  }
-  
-  @Before @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    clearIndex();
-    assertU(commit());
-  }
-  
   public void testMalformedStreamingXml() throws Exception {
     StringDataSource.xml = malformedXml;
-    runFullImport(dataConfigWithStreaming);
+    super.runFullImport(dataConfigWithStreaming);
     assertQ(req("id:1"), "//*[@numFound='1']");
     assertQ(req("id:2"), "//*[@numFound='1']");
   }
 
   public void testMalformedNonStreamingXml() throws Exception {
     StringDataSource.xml = malformedXml;
-    runFullImport(dataConfigWithoutStreaming);
+    super.runFullImport(dataConfigWithoutStreaming);
     assertQ(req("id:1"), "//*[@numFound='1']");
     assertQ(req("id:2"), "//*[@numFound='1']");
   }
 
   public void testAbortOnError() throws Exception {
     StringDataSource.xml = malformedXml;
-    runFullImport(dataConfigAbortOnError);
+    super.runFullImport(dataConfigAbortOnError);
     assertQ(req("*:*"), "//*[@numFound='0']");
   }
 
@@ -71,8 +56,28 @@ public class TestErrorHandling extends AbstractDataImportHandlerTestCase {
     List<Map<String, Object>> rows = new ArrayList<Map<String, Object>>();
     rows.add(createMap("id", "3", "desc", "exception-transformer"));
     MockDataSource.setIterator("select * from foo", rows.iterator());
-    runFullImport(dataConfigWithTransformer);
+    super.runFullImport(dataConfigWithTransformer);
     assertQ(req("*:*"), "//*[@numFound='3']");
+  }
+
+  @Override
+  public String getSchemaFile() {
+    return "dataimport-schema.xml";
+  }
+
+  @Override
+  public String getSolrConfigFile() {
+    return "dataimport-solrconfig.xml";
+  }
+
+  @Override
+  public void setUp() throws Exception {
+    super.setUp();
+  }
+
+  @Override
+  public void tearDown() throws Exception {
+    super.tearDown();
   }
 
   public static class StringDataSource extends DataSource<Reader> {
