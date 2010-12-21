@@ -1,3 +1,9 @@
+lucene-solr (4.0+20100920-1sg32) unstable; urgency=low
+
+  * Revert back to 2010/09/20 Solr build.
+
+ -- Ian Eure <ian@simplegeo.com>  Tue, 21 Dec 2010 11:19:40 -0800
+
 lucene-solr (4.0+20101215-1sg32) UNRELEASED; urgency=low
 
   [ Steven Rowe ]
