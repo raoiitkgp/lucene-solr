@@ -26,7 +26,7 @@ import org.apache.lucene.index.codecs.standard.DefaultSkipListReader;
 import org.apache.lucene.store.IndexInput;
 import org.apache.lucene.util.Bits;
 
-/** @deprecated (4.0)
+/** @deprecated 
  *  @lucene.experimental */
 @Deprecated
 public class SegmentTermDocs {

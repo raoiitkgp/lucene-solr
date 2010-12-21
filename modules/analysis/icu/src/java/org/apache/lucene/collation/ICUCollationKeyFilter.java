@@ -26,8 +26,6 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.util.IndexableBinaryStringTools;
 
-import org.apache.lucene.collation.CollationKeyFilter; // javadocs
-
 import java.io.IOException;
 
 

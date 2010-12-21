@@ -24,7 +24,6 @@ import org.apache.solr.core.SolrCore;
 import org.apache.solr.handler.component.QueryComponent;
 import org.apache.solr.handler.component.SearchComponent;
 import org.apache.solr.request.LocalSolrQueryRequest;
-import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.response.SolrQueryResponse;
 import org.apache.solr.request.SolrRequestHandler;
 import org.junit.Test;
@@ -55,13 +54,12 @@ public class ClusteringComponentTest extends AbstractClusteringTestCase {
     SolrQueryResponse rsp;
     rsp = new SolrQueryResponse();
     rsp.add("responseHeader", new SimpleOrderedMap());
-    SolrQueryRequest req = new LocalSolrQueryRequest(core, params);
-    handler.handleRequest(req, rsp);
+    handler.handleRequest(new LocalSolrQueryRequest(core, params), rsp);
     NamedList values = rsp.getValues();
     Object clusters = values.get("clusters");
     //System.out.println("Clusters: " + clusters);
     assertTrue("clusters is null and it shouldn't be", clusters != null);
-    req.close();
+
 
     params = new ModifiableSolrParams();
     params.add(ClusteringComponent.COMPONENT_NAME, "true");
@@ -73,13 +71,13 @@ public class ClusteringComponentTest extends AbstractClusteringTestCase {
 
     rsp = new SolrQueryResponse();
     rsp.add("responseHeader", new SimpleOrderedMap());
-    req = new LocalSolrQueryRequest(core, params);
-    handler.handleRequest(req, rsp);
+    handler.handleRequest(new LocalSolrQueryRequest(core, params), rsp);
     values = rsp.getValues();
     clusters = values.get("clusters");
     //System.out.println("Clusters: " + clusters);
     assertTrue("clusters is null and it shouldn't be", clusters != null);
-    req.close();
+
+
   }
 
 }

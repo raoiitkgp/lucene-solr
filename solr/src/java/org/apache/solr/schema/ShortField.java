@@ -18,9 +18,6 @@ package org.apache.solr.schema;
 
 import org.apache.lucene.document.Fieldable;
 import org.apache.lucene.search.SortField;
-import org.apache.lucene.search.cache.CachedArray;
-import org.apache.lucene.search.cache.CachedArrayCreator;
-import org.apache.lucene.search.cache.ShortValuesCreator;
 
 import org.apache.solr.response.TextResponseWriter;
 import org.apache.solr.response.XMLWriter;
@@ -49,7 +46,7 @@ public class ShortField extends FieldType {
 
   public ValueSource getValueSource(SchemaField field) {
 
-    return new ShortFieldSource(new ShortValuesCreator( field.name, null, CachedArrayCreator.CACHE_VALUES_AND_BITS ) );
+    return new ShortFieldSource(field.name);
   }
 
 

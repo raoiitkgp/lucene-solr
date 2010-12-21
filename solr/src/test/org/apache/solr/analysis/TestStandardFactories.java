@@ -19,8 +19,6 @@ package org.apache.solr.analysis;
 
 import java.io.Reader;
 import java.io.StringReader;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.Tokenizer;
@@ -34,70 +32,22 @@ public class TestStandardFactories extends BaseTokenTestCase {
    * Test StandardTokenizerFactory
    */
   public void testStandardTokenizer() throws Exception {
-    Reader reader = new StringReader("Wha\u0301t's this thing do?");
-    StandardTokenizerFactory factory = new StandardTokenizerFactory();
-    factory.init(DEFAULT_VERSION_PARAM);
-    Tokenizer stream = factory.create(reader);
-    assertTokenStreamContents(stream, 
-        new String[] {"Wha\u0301t's", "this", "thing", "do" });
-  }
-  
-  public void testStandardTokenizerMaxTokenLength() throws Exception {
-    StringBuilder builder = new StringBuilder();
-    for (int i = 0 ; i < 100 ; ++i) {
-      builder.append("abcdefg"); // 7 * 100 = 700 char "word"
-    }
-    String longWord = builder.toString();
-    String content = "one two three " + longWord + " four five six";
-    Reader reader = new StringReader(content);
-    Map<String,String> args = new HashMap<String,String>();
-    args.put("luceneMatchVersion", DEFAULT_VERSION_PARAM.get("luceneMatchVersion"));
-    args.put("maxTokenLength", "1000");
-    StandardTokenizerFactory factory = new StandardTokenizerFactory();
-    factory.init(args);
-    Tokenizer stream = factory.create(reader);
-    assertTokenStreamContents(stream, 
-        new String[] {"one", "two", "three", longWord, "four", "five", "six" });
-  }
-  
-  /**
-   * Test ClassicTokenizerFactory
-   */
-  public void testClassicTokenizer() throws Exception {
     Reader reader = new StringReader("What's this thing do?");
-    ClassicTokenizerFactory factory = new ClassicTokenizerFactory();
+    StandardTokenizerFactory factory = new StandardTokenizerFactory();
     factory.init(DEFAULT_VERSION_PARAM);
     Tokenizer stream = factory.create(reader);
     assertTokenStreamContents(stream, 
         new String[] {"What's", "this", "thing", "do" });
   }
   
-  public void testClassicTokenizerMaxTokenLength() throws Exception {
-    StringBuilder builder = new StringBuilder();
-    for (int i = 0 ; i < 100 ; ++i) {
-      builder.append("abcdefg"); // 7 * 100 = 700 char "word"
-    }
-    String longWord = builder.toString();
-    String content = "one two three " + longWord + " four five six";
-    Reader reader = new StringReader(content);
-    Map<String,String> args = new HashMap<String,String>();
-    args.put("luceneMatchVersion", DEFAULT_VERSION_PARAM.get("luceneMatchVersion"));
-    args.put("maxTokenLength", "1000");
-    ClassicTokenizerFactory factory = new ClassicTokenizerFactory();
-    factory.init(args);
-    Tokenizer stream = factory.create(reader);
-    assertTokenStreamContents(stream, 
-        new String[] {"one", "two", "three", longWord, "four", "five", "six" });
-  }
-  
   /**
-   * Test ClassicFilterFactory
+   * Test StandardFilterFactory
    */
   public void testStandardFilter() throws Exception {
     Reader reader = new StringReader("What's this thing do?");
-    ClassicTokenizerFactory factory = new ClassicTokenizerFactory();
+    StandardTokenizerFactory factory = new StandardTokenizerFactory();
     factory.init(DEFAULT_VERSION_PARAM);
-    ClassicFilterFactory filterFactory = new ClassicFilterFactory();
+    StandardFilterFactory filterFactory = new StandardFilterFactory();
     filterFactory.init(DEFAULT_VERSION_PARAM);
     Tokenizer tokenizer = factory.create(reader);
     TokenStream stream = filterFactory.create(tokenizer);
@@ -163,5 +113,18 @@ public class TestStandardFactories extends BaseTokenTestCase {
     factory.init(DEFAULT_VERSION_PARAM);
     TokenStream stream = factory.create(tokenizer);
     assertTokenStreamContents(stream, new String[] { "Ceska" });
+  }
+  
+  /**
+   * Ensure the ISOLatin1AccentFilterFactory works 
+   * (sometimes, at least not uppercase hacek)
+   */
+  public void testISOLatin1Folding() throws Exception {
+    Reader reader = new StringReader("Česká");
+    Tokenizer tokenizer = new WhitespaceTokenizer(DEFAULT_VERSION, reader);
+    ISOLatin1AccentFilterFactory factory = new ISOLatin1AccentFilterFactory();
+    factory.init(DEFAULT_VERSION_PARAM);
+    TokenStream stream = factory.create(tokenizer);
+    assertTokenStreamContents(stream, new String[] { "Česka" });
   }
 }

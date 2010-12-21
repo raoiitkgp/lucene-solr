@@ -65,7 +65,5 @@ public class TestBinaryResponseWriter extends AbstractSolrTestCase {
       assertEquals("Returned object must be a string", "java.lang.String", document.getFieldValue("uuid").getClass().getName());
       assertEquals("Wrong UUID string returned", s, document.getFieldValue("uuid"));
     }
-
-    req.close();
   }
 }

@@ -21,6 +21,7 @@ import java.io.Reader;
 
 import org.apache.lucene.analysis.CharTokenizer;
 import org.apache.lucene.analysis.util.ReusableAnalyzerBase;
+import org.apache.lucene.analysis.util.ReusableAnalyzerBase.TokenStreamComponents;
 import org.apache.lucene.util.Version;
 
 /**
@@ -45,6 +46,15 @@ public final class WhitespaceAnalyzer extends ReusableAnalyzerBase {
    */
   public WhitespaceAnalyzer(Version matchVersion) {
     this.matchVersion = matchVersion;
+  }
+  
+  /**
+   * Creates a new {@link WhitespaceAnalyzer}
+   * @deprecated use {@link #WhitespaceAnalyzer(Version)} instead 
+   */
+  @Deprecated
+  public WhitespaceAnalyzer() {
+    this(Version.LUCENE_30);
   }
   
   @Override

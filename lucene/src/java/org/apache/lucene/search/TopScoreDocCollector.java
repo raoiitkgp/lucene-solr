@@ -109,10 +109,6 @@ public abstract class TopScoreDocCollector extends TopDocsCollector<ScoreDoc> {
    */
   public static TopScoreDocCollector create(int numHits, boolean docsScoredInOrder) {
     
-    if (numHits <= 0) {
-      throw new IllegalArgumentException("numHits must be > 0; please use TotalHitCountCollector if you just need the total hit count");
-    }
-
     if (docsScoredInOrder) {
       return new InOrderTopScoreDocCollector(numHits);
     } else {

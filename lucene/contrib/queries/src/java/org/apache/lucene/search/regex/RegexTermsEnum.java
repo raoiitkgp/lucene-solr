@@ -18,8 +18,8 @@ package org.apache.lucene.search.regex;
  */
 
 import org.apache.lucene.search.FilteredTermsEnum;
+import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.util.BytesRef;
 
 import java.io.IOException;
@@ -37,8 +37,8 @@ public class RegexTermsEnum extends FilteredTermsEnum {
   private RegexCapabilities.RegexMatcher regexImpl;
   private final BytesRef prefixRef;
 
-  public RegexTermsEnum(TermsEnum tenum, Term term, RegexCapabilities regexCap) throws IOException {
-    super(tenum);
+  public RegexTermsEnum(IndexReader reader, Term term, RegexCapabilities regexCap) throws IOException {
+    super(reader, term.field());
     String text = term.text();
     this.regexImpl = regexCap.compile(text);
 

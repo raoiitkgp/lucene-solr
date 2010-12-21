@@ -23,7 +23,6 @@ import org.slf4j.LoggerFactory;
 /**
  * @deprecated use org.apache.solr.response.JSONResponseWriter
  */
-@Deprecated
 public class JSONResponseWriter extends org.apache.solr.response.JSONResponseWriter 
 {
   

@@ -38,13 +38,11 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.RAMDirectory;
-import org.apache.lucene.util.Version;
 import org.apache.lucene.xmlparser.CorePlusExtensionsParser;
 import org.apache.lucene.xmlparser.QueryTemplateManager;
 
@@ -122,8 +120,7 @@ public class FormBasedXmlQueryDemo extends HttpServlet {
 
 		//Create a RAM-based index from our test data file
 		RAMDirectory rd=new RAMDirectory();
-                IndexWriterConfig iwConfig = new IndexWriterConfig(Version.LUCENE_40, analyzer);
-		IndexWriter writer=new IndexWriter (rd, iwConfig);
+		IndexWriter writer=new IndexWriter (rd,analyzer,IndexWriter.MaxFieldLength.LIMITED);
 		InputStream dataIn=getServletContext().getResourceAsStream("/WEB-INF/data.tsv");
 		BufferedReader br = new BufferedReader(new InputStreamReader(dataIn));
 		String line = br.readLine();

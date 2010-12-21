@@ -33,52 +33,58 @@ public interface QueryParserConstants {
   /** RegularExpression Id. */
   int MINUS = 12;
   /** RegularExpression Id. */
-  int BAREOPER = 13;
+  int LPAREN = 13;
   /** RegularExpression Id. */
-  int LPAREN = 14;
+  int RPAREN = 14;
   /** RegularExpression Id. */
-  int RPAREN = 15;
+  int COLON = 15;
   /** RegularExpression Id. */
-  int COLON = 16;
+  int STAR = 16;
   /** RegularExpression Id. */
-  int STAR = 17;
+  int CARAT = 17;
   /** RegularExpression Id. */
-  int CARAT = 18;
+  int QUOTED = 18;
   /** RegularExpression Id. */
-  int QUOTED = 19;
+  int TERM = 19;
   /** RegularExpression Id. */
-  int TERM = 20;
+  int FUZZY_SLOP = 20;
   /** RegularExpression Id. */
-  int FUZZY_SLOP = 21;
+  int PREFIXTERM = 21;
   /** RegularExpression Id. */
-  int PREFIXTERM = 22;
+  int WILDTERM = 22;
   /** RegularExpression Id. */
-  int WILDTERM = 23;
+  int REGEXPTERM = 23;
   /** RegularExpression Id. */
-  int REGEXPTERM = 24;
+  int RANGEIN_START = 24;
   /** RegularExpression Id. */
-  int RANGEIN_START = 25;
+  int RANGEEX_START = 25;
   /** RegularExpression Id. */
-  int RANGEEX_START = 26;
+  int NUMBER = 26;
   /** RegularExpression Id. */
-  int NUMBER = 27;
+  int RANGEIN_TO = 27;
   /** RegularExpression Id. */
-  int RANGE_TO = 28;
+  int RANGEIN_END = 28;
   /** RegularExpression Id. */
-  int RANGEIN_END = 29;
+  int RANGEIN_QUOTED = 29;
   /** RegularExpression Id. */
-  int RANGEEX_END = 30;
+  int RANGEIN_GOOP = 30;
   /** RegularExpression Id. */
-  int RANGE_QUOTED = 31;
+  int RANGEEX_TO = 31;
   /** RegularExpression Id. */
-  int RANGE_GOOP = 32;
+  int RANGEEX_END = 32;
+  /** RegularExpression Id. */
+  int RANGEEX_QUOTED = 33;
+  /** RegularExpression Id. */
+  int RANGEEX_GOOP = 34;
 
   /** Lexical state. */
   int Boost = 0;
   /** Lexical state. */
-  int Range = 1;
+  int RangeEx = 1;
   /** Lexical state. */
-  int DEFAULT = 2;
+  int RangeIn = 2;
+  /** Lexical state. */
+  int DEFAULT = 3;
 
   /** Literal token values. */
   String[] tokenImage = {
@@ -95,7 +101,6 @@ public interface QueryParserConstants {
     "<NOT>",
     "\"+\"",
     "\"-\"",
-    "<BAREOPER>",
     "\"(\"",
     "\")\"",
     "\":\"",
@@ -112,9 +117,12 @@ public interface QueryParserConstants {
     "<NUMBER>",
     "\"TO\"",
     "\"]\"",
+    "<RANGEIN_QUOTED>",
+    "<RANGEIN_GOOP>",
+    "\"TO\"",
     "\"}\"",
-    "<RANGE_QUOTED>",
-    "<RANGE_GOOP>",
+    "<RANGEEX_QUOTED>",
+    "<RANGEEX_GOOP>",
   };
 
 }

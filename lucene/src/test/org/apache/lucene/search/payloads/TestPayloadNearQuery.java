@@ -71,7 +71,7 @@ public class TestPayloadNearQuery extends LuceneTestCase {
     public PayloadFilter(TokenStream input, String fieldName) {
       super(input);
       this.fieldName = fieldName;
-      payAtt = addAttribute(PayloadAttribute.class);
+      payAtt = (PayloadAttribute) addAttribute(PayloadAttribute.class);
     }
 
     @Override

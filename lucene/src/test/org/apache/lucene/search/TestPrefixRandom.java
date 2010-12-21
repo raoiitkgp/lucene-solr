@@ -25,12 +25,10 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.index.RandomIndexWriter;
 import org.apache.lucene.index.codecs.CodecProvider;
 import org.apache.lucene.store.Directory;
-import org.apache.lucene.util.AttributeSource;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.LuceneTestCase;
 import org.apache.lucene.util._TestUtil;
@@ -58,7 +56,7 @@ public class TestPrefixRandom extends LuceneTestCase {
 
     // we generate aweful prefixes: good for testing.
     // but for preflex codec, the test can be very slow, so use less iterations.
-    final String codec = CodecProvider.getDefault().getFieldCodec("field");
+    String codec = CodecProvider.getDefaultCodec();
     int num = codec.equals("PreFlex") ? 200 * RANDOM_MULTIPLIER : 2000 * RANDOM_MULTIPLIER;
     for (int i = 0; i < num; i++) {
       field.setValue(_TestUtil.randomUnicodeString(random, 10));
@@ -87,15 +85,16 @@ public class TestPrefixRandom extends LuceneTestCase {
     }
     
     @Override
-    protected TermsEnum getTermsEnum(Terms terms, AttributeSource atts) throws IOException {
-      return new SimplePrefixTermsEnum(terms.iterator(), prefix);
+    protected TermsEnum getTermsEnum(IndexReader reader) throws IOException {
+      return new SimplePrefixTermsEnum(reader, field, prefix);
     }
 
     private class SimplePrefixTermsEnum extends FilteredTermsEnum {
       private final BytesRef prefix;
 
-      private SimplePrefixTermsEnum(TermsEnum tenum, BytesRef prefix) throws IOException {
-        super(tenum);
+      private SimplePrefixTermsEnum(IndexReader reader, 
+          String field, BytesRef prefix) throws IOException {
+        super(reader, field);
         this.prefix = prefix;
         setInitialSeekTerm(new BytesRef(""));
       }

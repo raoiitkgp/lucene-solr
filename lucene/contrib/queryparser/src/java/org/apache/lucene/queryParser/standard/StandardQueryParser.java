@@ -413,7 +413,7 @@ public class StandardQueryParser extends QueryParserHelper {
     attr.setFuzzyMinSimilarity(fuzzyMinSim);
   }
   
-  public void setFieldsBoost(Map<String, Float> boosts) {
+  public void setFieldsBoost(Map<CharSequence, Float> boosts) {
     FieldBoostMapAttribute attr = getQueryConfigHandler().addAttribute(FieldBoostMapAttribute.class);
     attr.setFieldBoostMap(boosts);
   }

@@ -203,16 +203,16 @@ public class MultiFieldQueryParser extends QueryParser
 
  
   @Override
-  protected Query getRangeQuery(String field, String part1, String part2, boolean startInclusive, boolean endInclusive) throws ParseException {
+  protected Query getRangeQuery(String field, String part1, String part2, boolean inclusive) throws ParseException {
     if (field == null) {
       List<BooleanClause> clauses = new ArrayList<BooleanClause>();
       for (int i = 0; i < fields.length; i++) {
-        clauses.add(new BooleanClause(getRangeQuery(fields[i], part1, part2, startInclusive, endInclusive),
+        clauses.add(new BooleanClause(getRangeQuery(fields[i], part1, part2, inclusive),
             BooleanClause.Occur.SHOULD));
       }
       return getBooleanQuery(clauses, true);
     }
-    return super.getRangeQuery(field, part1, part2, startInclusive, endInclusive);
+    return super.getRangeQuery(field, part1, part2, inclusive);
   }
 
   /**

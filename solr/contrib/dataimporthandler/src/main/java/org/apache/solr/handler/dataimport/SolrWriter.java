@@ -125,15 +125,6 @@ public class SolrWriter {
     }
   }
 
-  void finish() {
-    try {
-      processor.finish();
-    } catch (IOException e) {
-      throw new DataImportHandlerException(DataImportHandlerException.SEVERE,
-          "Unable to call finish() on UpdateRequestProcessor", e);
-    }
-  }
-  
   Properties readIndexerProperties() {
     Properties props = new Properties();
     InputStream propInput = null;

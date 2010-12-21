@@ -85,22 +85,22 @@ public class QueryParser {
   }
     
   protected SrndQuery getFieldsQuery(
-      SrndQuery q, ArrayList<String> fieldNames) {
+      SrndQuery q, ArrayList fieldNames) {
     /* FIXME: check acceptable subquery: at least one subquery should not be
      * a fields query.
      */
     return new FieldsQuery(q, fieldNames, fieldOperator);
   }
   
-  protected SrndQuery getOrQuery(List<SrndQuery> queries, boolean infix, Token orToken) {
+  protected SrndQuery getOrQuery(List queries, boolean infix, Token orToken) {
     return new OrQuery(queries, infix, orToken.image);
   }
 
-  protected SrndQuery getAndQuery(List<SrndQuery> queries, boolean infix, Token andToken) {
+  protected SrndQuery getAndQuery(List queries, boolean infix, Token andToken) {
     return new AndQuery( queries, infix, andToken.image);
   }
   
-  protected SrndQuery getNotQuery(List<SrndQuery> queries, Token notToken) {
+  protected SrndQuery getNotQuery(List queries, Token notToken) {
     return new NotQuery( queries, notToken.image);
   }
   
@@ -120,7 +120,7 @@ public class QueryParser {
   }
   
   protected SrndQuery getDistanceQuery(
-        List<SrndQuery> queries,
+        List queries,
         boolean infix,
         Token dToken,
         boolean ordered) throws ParseException {
@@ -231,7 +231,7 @@ SrndQuery TopSrndQuery() : {
 
 SrndQuery FieldsQuery() : {
   SrndQuery q;
-  ArrayList<String> fieldNames;
+  ArrayList fieldNames;
 }{
   fieldNames = OptionalFields()
   q = OrQuery()
@@ -239,15 +239,15 @@ SrndQuery FieldsQuery() : {
 }
 
 
-ArrayList<String> OptionalFields() : {
+ArrayList OptionalFields() : {
   Token fieldName;
-  ArrayList<String> fieldNames = null;
+  ArrayList fieldNames = null;
 }{
   ( LOOKAHEAD(2) // to the colon
     fieldName = <TERM>
     <COLON> {
       if (fieldNames == null) {
-        fieldNames = new ArrayList<String>();
+        fieldNames = new ArrayList();
       }
       fieldNames.add(fieldName.image);
     }
@@ -258,13 +258,13 @@ ArrayList<String> OptionalFields() : {
 
 SrndQuery OrQuery() : {
   SrndQuery q;
-  ArrayList<SrndQuery> queries = null;
+  ArrayList queries = null;
   Token oprt = null;
 }{
   q = AndQuery()
   ( oprt = <OR> { /* keep only last used operator */
       if (queries == null) {
-        queries = new ArrayList<SrndQuery>();
+        queries = new ArrayList();
         queries.add(q);
       }
     }    
@@ -278,13 +278,13 @@ SrndQuery OrQuery() : {
 
 SrndQuery AndQuery() : {
   SrndQuery q;
-  ArrayList<SrndQuery> queries = null;
+  ArrayList queries = null;
   Token oprt = null;
 }{
   q = NotQuery()
   ( oprt = <AND> { /* keep only last used operator */
       if (queries == null) {
-        queries = new ArrayList<SrndQuery>();
+        queries = new ArrayList();
         queries.add(q);
       }
     }
@@ -298,13 +298,13 @@ SrndQuery AndQuery() : {
 
 SrndQuery NotQuery() : {
   SrndQuery q;
-  ArrayList<SrndQuery> queries = null;
+  ArrayList queries = null;
   Token oprt = null;
 }{
   q = NQuery()
   ( oprt = <NOT>  { /* keep only last used operator */
       if (queries == null) {
-        queries = new ArrayList<SrndQuery>();
+        queries = new ArrayList();
         queries.add(q);
       }
     }
@@ -318,12 +318,12 @@ SrndQuery NotQuery() : {
 
 SrndQuery NQuery() : {
   SrndQuery q;
-  ArrayList<SrndQuery> queries;
+  ArrayList queries;
   Token dt;
 }{
   q = WQuery()
   ( dt = <N> {
-      queries = new ArrayList<SrndQuery>();
+      queries = new ArrayList();
       queries.add(q); /* left associative */
     }
     q = WQuery() {
@@ -337,12 +337,12 @@ SrndQuery NQuery() : {
 
 SrndQuery WQuery() : {
   SrndQuery q;
-  ArrayList<SrndQuery> queries;
+  ArrayList queries;
   Token wt;
 }{
   q = PrimaryQuery()
   ( wt = <W> {
-      queries = new ArrayList<SrndQuery>();
+      queries = new ArrayList();
       queries.add(q); /* left associative */
     }
     q = PrimaryQuery() {
@@ -368,7 +368,7 @@ SrndQuery PrimaryQuery() : { /* bracketed weighted query or weighted term */
 
 SrndQuery PrefixOperatorQuery() : {
   Token oprt;
-  List<SrndQuery> queries;
+  List queries;
 }{
   ( oprt = <OR> /* prefix OR */
     queries = FieldsQueryList()
@@ -389,9 +389,9 @@ SrndQuery PrefixOperatorQuery() : {
 }
 
 
-List<SrndQuery> FieldsQueryList() : {
+List FieldsQueryList() : {
   SrndQuery q;
-  ArrayList<SrndQuery> queries = new ArrayList<SrndQuery>();
+  ArrayList queries = new ArrayList();
 }{
   <LPAREN>
   q = FieldsQuery() {queries.add(q);}

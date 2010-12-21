@@ -258,7 +258,7 @@ public class TernaryTree implements Cloneable, Serializable {
       }
     }
     if (a[start + i] != 0) {
-      return -a[start + i];
+      return (int) -a[start + i];
     }
     return 0;
 
@@ -394,7 +394,7 @@ public class TernaryTree implements Cloneable, Serializable {
     Iterator iter = new Iterator();
     while (iter.hasMoreElements()) {
       v[i] = iter.getValue();
-      k[i++] = iter.nextElement();
+      k[i++] = (String) iter.nextElement();
     }
     init();
     insertBalanced(k, v, 0, n);
@@ -453,11 +453,11 @@ public class TernaryTree implements Cloneable, Serializable {
     }
   }
 
-  public Enumeration<String> keys() {
+  public Enumeration keys() {
     return new Iterator();
   }
 
-  public class Iterator implements Enumeration<String> {
+  public class Iterator implements Enumeration {
 
     /**
      * current node index
@@ -494,7 +494,7 @@ public class TernaryTree implements Cloneable, Serializable {
     /**
      * Node stack
      */
-    Stack<Item> ns;
+    Stack ns;
 
     /**
      * key stack implemented with a StringBuilder
@@ -503,7 +503,7 @@ public class TernaryTree implements Cloneable, Serializable {
 
     public Iterator() {
       cur = -1;
-      ns = new Stack<Item>();
+      ns = new Stack();
       ks = new StringBuilder();
       rewind();
     }
@@ -515,7 +515,7 @@ public class TernaryTree implements Cloneable, Serializable {
       run();
     }
 
-    public String nextElement() {
+    public Object nextElement() {
       String res = new String(curkey);
       cur = up();
       run();
@@ -551,17 +551,17 @@ public class TernaryTree implements Cloneable, Serializable {
       boolean climb = true;
 
       while (climb) {
-        i = ns.pop();
+        i = (Item) ns.pop();
         i.child++;
         switch (i.child) {
           case 1:
             if (sc[i.parent] != 0) {
               res = eq[i.parent];
-              ns.push((Item) i.clone());
+              ns.push(i.clone());
               ks.append(sc[i.parent]);
             } else {
               i.child++;
-              ns.push((Item) i.clone());
+              ns.push(i.clone());
               res = hi[i.parent];
             }
             climb = false;
@@ -569,7 +569,7 @@ public class TernaryTree implements Cloneable, Serializable {
 
           case 2:
             res = hi[i.parent];
-            ns.push((Item) i.clone());
+            ns.push(i.clone());
             if (ks.length() > 0) {
               ks.setLength(ks.length() - 1); // pop
             }

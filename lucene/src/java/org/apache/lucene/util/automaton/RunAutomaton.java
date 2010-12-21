@@ -131,8 +131,8 @@ public abstract class RunAutomaton implements Serializable {
     this.maxInterval = maxInterval;
     a.determinize();
     points = a.getStartPoints();
-    final State[] states = a.getNumberedStates();
     initial = a.initial.number;
+    final State[] states = a.getNumberedStates();
     size = states.length;
     accept = new boolean[size];
     transitions = new int[size * points.length];

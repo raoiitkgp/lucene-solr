@@ -2,7 +2,6 @@ package org.apache.lucene.xmlparser.builders;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.search.FuzzyLikeThisQuery;
-import org.apache.lucene.search.FuzzyQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.xmlparser.DOMUtils;
 import org.apache.lucene.xmlparser.ParserException;
@@ -33,7 +32,7 @@ import org.w3c.dom.NodeList;
 public class FuzzyLikeThisQueryBuilder implements QueryBuilder
 {
 	int defaultMaxNumTerms=50;
-	float defaultMinSimilarity=FuzzyQuery.defaultMinSimilarity;
+	float defaultMinSimilarity=0.5f;
 	int defaultPrefixLength=1;
 	boolean defaultIgnoreTF=false;
 	private Analyzer analyzer;

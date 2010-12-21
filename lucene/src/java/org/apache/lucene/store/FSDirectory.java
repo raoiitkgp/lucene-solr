@@ -134,6 +134,12 @@ public abstract class FSDirectory extends Directory {
   protected final Set<String> staleFiles = synchronizedSet(new HashSet<String>()); // Files written, but not yet sync'ed
   private int chunkSize = DEFAULT_READ_CHUNK_SIZE; // LUCENE-1566
 
+  /**
+   * Chunk size used to read when using FileChannel API. If an attempt to read a
+   * large file is made without limiting the chunk size, an OOM may occur.
+   */
+  private static final long CHANNEL_CHUNK_SIZE = 1 << 21; // Use 2MB chunk size - LUCENE-2537
+
   // returns the canonical version of the directory, creating it if it doesn't exist.
   private static File getCanonicalPath(File file) throws IOException {
     return new File(file.getCanonicalPath());
@@ -156,49 +162,7 @@ public abstract class FSDirectory extends Directory {
       throw new NoSuchDirectoryException("file '" + directory + "' exists but is not a directory");
 
     setLockFactory(lockFactory);
-  }
-
-  /** Creates an FSDirectory instance, trying to pick the
-   *  best implementation given the current environment.
-   *  The directory returned uses the {@link NativeFSLockFactory}.
-   *
-   *  <p>Currently this returns {@link NIOFSDirectory}
-   *  on non-Windows JREs, {@link MMapDirectory} on 64-bit 
-   *  Sun Windows JREs, and {@link SimpleFSDirectory} for other
-   *  JRes on Windows. It is highly recommended that you consult the
-   *  implementation's documentation for your platform before
-   *  using this method.
-   *
-   * <p><b>NOTE</b>: this method may suddenly change which
-   * implementation is returned from release to release, in
-   * the event that higher performance defaults become
-   * possible; if the precise implementation is important to
-   * your application, please instantiate it directly,
-   * instead. For optimal performance you should consider using
-   * {@link MMapDirectory} on 64 bit JVMs.
-   *
-   * <p>See <a href="#subclasses">above</a> */
-  public static FSDirectory open(File path) throws IOException {
-    return open(path, null);
-  }
-
-  /** Just like {@link #open(File)}, but allows you to
-   *  also specify a custom {@link LockFactory}. */
-  public static FSDirectory open(File path, LockFactory lockFactory) throws IOException {
-    if (Constants.WINDOWS) {
-      if (MMapDirectory.UNMAP_SUPPORTED && Constants.JRE_IS_64BIT)
-        return new MMapDirectory(path, lockFactory);
-      else
-        return new SimpleFSDirectory(path, lockFactory);
-    } else {
-      return new NIOFSDirectory(path, lockFactory);
-    }
-  }
-
-  @Override
-  public void setLockFactory(LockFactory lockFactory) throws IOException {
-    super.setLockFactory(lockFactory);
-
+    
     // for filesystem based LockFactory, delete the lockPrefix, if the locks are placed
     // in index dir. If no index dir is given, set ourselves
     if (lockFactory instanceof FSLockFactory) {
@@ -212,9 +176,44 @@ public abstract class FSDirectory extends Directory {
         lf.setLockPrefix(null);
       }
     }
-
   }
-  
+
+  /** Creates an FSDirectory instance, trying to pick the
+   *  best implementation given the current environment.
+   *  The directory returned uses the {@link NativeFSLockFactory}.
+   *
+   *  <p>Currently this returns {@link NIOFSDirectory}
+   *  on non-Windows JREs and {@link SimpleFSDirectory}
+   *  on Windows. It is highly recommended that you consult the
+   *  implementation's documentation for your platform before
+   *  using this method.
+   *
+   * <p><b>NOTE</b>: this method may suddenly change which
+   * implementation is returned from release to release, in
+   * the event that higher performance defaults become
+   * possible; if the precise implementation is important to
+   * your application, please instantiate it directly,
+   * instead. On 64 bit systems, it may also good to
+   * return {@link MMapDirectory}, but this is disabled
+   * because of officially missing unmap support in Java.
+   * For optimal performance you should consider using
+   * this implementation on 64 bit JVMs.
+   *
+   * <p>See <a href="#subclasses">above</a> */
+  public static FSDirectory open(File path) throws IOException {
+    return open(path, null);
+  }
+
+  /** Just like {@link #open(File)}, but allows you to
+   *  also specify a custom {@link LockFactory}. */
+  public static FSDirectory open(File path, LockFactory lockFactory) throws IOException {
+    if (Constants.WINDOWS) {
+      return new SimpleFSDirectory(path, lockFactory);
+    } else {
+      return new NIOFSDirectory(path, lockFactory);
+    }
+  }
+
   /** Lists all files (not subdirectories) in the
    *  directory.  This method never returns null (throws
    *  {@link IOException} instead).
@@ -327,6 +326,12 @@ public abstract class FSDirectory extends Directory {
     staleFiles.add(io.name);
   }
 
+  @Deprecated
+  @Override
+  public void sync(String name) throws IOException {
+    sync(Collections.singleton(name));
+  }
+
   @Override
   public void sync(Collection<String> names) throws IOException {
     ensureOpen();
@@ -383,6 +388,12 @@ public abstract class FSDirectory extends Directory {
     isOpen = false;
   }
 
+  /** @deprecated Use {@link #getDirectory} instead. */
+  @Deprecated
+  public File getFile() {
+    return getDirectory();
+  }
+
   /** @return the underlying filesystem directory */
   public File getDirectory() {
     ensureOpen();
@@ -392,7 +403,7 @@ public abstract class FSDirectory extends Directory {
   /** For debug output. */
   @Override
   public String toString() {
-    return this.getClass().getName() + "@" + directory + " lockFactory=" + getLockFactory();
+    return this.getClass().getName() + "@" + directory;
   }
 
   /**

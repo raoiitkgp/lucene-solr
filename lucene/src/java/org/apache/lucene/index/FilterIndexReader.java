@@ -130,11 +130,6 @@ public class FilterIndexReader extends IndexReader {
     }
 
     @Override
-    public void cacheCurrentTerm() throws IOException {
-      in.cacheCurrentTerm();
-    }
-
-    @Override
     public SeekStatus seek(long ord) throws IOException {
       return in.seek(ord);
     }
@@ -279,7 +274,7 @@ public class FilterIndexReader extends IndexReader {
   
   @Override
   public Bits getDeletedDocs() {
-    return in.getDeletedDocs();
+    return MultiFields.getDeletedDocs(in);
   }
   
   @Override
@@ -415,12 +410,12 @@ public class FilterIndexReader extends IndexReader {
   
   @Override
   public IndexReader[] getSequentialSubReaders() {
-    return in.getSequentialSubReaders();
+    return null;
   }
 
   @Override
   public Fields fields() throws IOException {
-    return in.fields();
+    return MultiFields.getFields(in);
   }
 
   /** If the subclass of FilteredIndexReader modifies the

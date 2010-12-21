@@ -69,7 +69,7 @@ public class TestOrdValues extends FunctionTestSetup {
 
     Query q = new ValueSourceQuery(vs);
     log("test: " + q);
-    QueryUtils.check(random, q, s);
+    QueryUtils.check(q, s);
     ScoreDoc[] h = s.search(q, null, 1000).scoreDocs;
     assertEquals("All docs should be matched!", N_DOCS, h.length);
     String prevID = inOrder

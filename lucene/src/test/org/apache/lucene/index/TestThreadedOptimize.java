@@ -41,10 +41,12 @@ public class TestThreadedOptimize extends LuceneTestCase {
   //private final static int NUM_THREADS = 5;
 
   private final static int NUM_ITER = 1;
+  //private final static int NUM_ITER = 10;
 
   private final static int NUM_ITER2 = 1;
+  //private final static int NUM_ITER2 = 5;
 
-  private volatile boolean failed;
+  private boolean failed;
 
   private void setFailed() {
     failed = true;
@@ -52,14 +54,10 @@ public class TestThreadedOptimize extends LuceneTestCase {
 
   public void runTest(Random random, Directory directory, MergeScheduler merger) throws Exception {
 
-    IndexWriter writer = new IndexWriter(
-        directory,
-        newIndexWriterConfig(TEST_VERSION_CURRENT, ANALYZER).
-            setOpenMode(OpenMode.CREATE).
-            setMaxBufferedDocs(2).
-            setMergeScheduler(merger).
-            setMergePolicy(newLogMergePolicy())
-    );
+    IndexWriter writer = new IndexWriter(directory, newIndexWriterConfig(
+        TEST_VERSION_CURRENT, ANALYZER)
+        .setOpenMode(OpenMode.CREATE).setMaxBufferedDocs(2).setMergeScheduler(
+            merger));
 
     for(int iter=0;iter<NUM_ITER;iter++) {
       final int iterFinal = iter;
@@ -116,16 +114,17 @@ public class TestThreadedOptimize extends LuceneTestCase {
 
       final int expectedDocCount = (int) ((1+iter)*(200+8*NUM_ITER2*(NUM_THREADS/2.0)*(1+NUM_THREADS)));
 
-      assertEquals("index=" + writer.segString() + " numDocs=" + writer.numDocs() + " maxDoc=" + writer.maxDoc() + " config=" + writer.getConfig(), expectedDocCount, writer.numDocs());
-      assertEquals("index=" + writer.segString() + " numDocs=" + writer.numDocs() + " maxDoc=" + writer.maxDoc() + " config=" + writer.getConfig(), expectedDocCount, writer.maxDoc());
+      // System.out.println("TEST: now index=" + writer.segString());
+
+      assertEquals(expectedDocCount, writer.maxDoc());
 
       writer.close();
       writer = new IndexWriter(directory, newIndexWriterConfig(
           TEST_VERSION_CURRENT, ANALYZER).setOpenMode(
           OpenMode.APPEND).setMaxBufferedDocs(2));
-      
+
       IndexReader reader = IndexReader.open(directory, true);
-      assertTrue("reader=" + reader, reader.isOptimized());
+      assertTrue(reader.isOptimized());
       assertEquals(expectedDocCount, reader.numDocs());
       reader.close();
     }
@@ -141,5 +140,12 @@ public class TestThreadedOptimize extends LuceneTestCase {
     runTest(random, directory, new SerialMergeScheduler());
     runTest(random, directory, new ConcurrentMergeScheduler());
     directory.close();
+
+    File dirName = new File(TEMP_DIR, "luceneTestThreadedOptimize");
+    directory = FSDirectory.open(dirName);
+    runTest(random, directory, new SerialMergeScheduler());
+    runTest(random, directory, new ConcurrentMergeScheduler());
+    directory.close();
+    _TestUtil.rmDir(dirName);
   }
 }

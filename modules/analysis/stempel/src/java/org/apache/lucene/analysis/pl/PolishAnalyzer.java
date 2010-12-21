@@ -17,6 +17,8 @@ package org.apache.lucene.analysis.pl;
  * limitations under the License.
  */
 
+import java.io.BufferedInputStream;
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
@@ -48,9 +50,6 @@ public final class PolishAnalyzer extends StopwordAnalyzerBase {
   /** File containing default Polish stopwords. */
   public final static String DEFAULT_STOPWORD_FILE = "stopwords.txt";
   
-  /** File containing default Polish stemmer table. */
-  public final static String DEFAULT_STEMMER_FILE = "stemmer_20000.tbl";
-  
   /**
    * Returns an unmodifiable instance of the default stop words set.
    * @return default stop words set.
@@ -77,8 +76,16 @@ public final class PolishAnalyzer extends StopwordAnalyzerBase {
         throw new RuntimeException("Unable to load default stopword set", ex);
       }
       
+      InputStream stream = PolishAnalyzer.class.getResourceAsStream("stemmer_20000.tbl");
       try {
-        DEFAULT_TABLE = StempelStemmer.load(PolishAnalyzer.class.getResourceAsStream(DEFAULT_STEMMER_FILE));
+        DataInputStream in = new DataInputStream(new BufferedInputStream(stream));
+        String method = in.readUTF().toUpperCase();
+        if (method.indexOf('M') < 0) {
+          DEFAULT_TABLE = new org.egothor.stemmer.Trie(in);
+        } else {
+          DEFAULT_TABLE = new org.egothor.stemmer.MultiTrie2(in);
+        }
+        in.close();
       } catch (IOException ex) {
         // default set should always be present as it is part of the
         // distribution (JAR)
@@ -106,7 +113,7 @@ public final class PolishAnalyzer extends StopwordAnalyzerBase {
 
   /**
    * Builds an analyzer with the given stop words. If a non-empty stem exclusion set is
-   * provided this analyzer will add a {@link KeywordMarkerFilter} before
+   * provided this analyzer will add a {@link KeywordMarkerTokenFilter} before
    * stemming.
    * 
    * @param matchVersion lucene compatibility version
@@ -136,7 +143,7 @@ public final class PolishAnalyzer extends StopwordAnalyzerBase {
   protected TokenStreamComponents createComponents(String fieldName,
       Reader reader) {
     final Tokenizer source = new StandardTokenizer(matchVersion, reader);
-    TokenStream result = new StandardFilter(matchVersion, source);
+    TokenStream result = new StandardFilter(source);
     result = new LowerCaseFilter(matchVersion, result);
     result = new StopFilter(matchVersion, result, stopwords);
     if(!stemExclusionSet.isEmpty())

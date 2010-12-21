@@ -17,16 +17,17 @@ package org.apache.lucene.analysis.icu.segmentation;
  * limitations under the License.
  */
 
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.BaseTokenStreamTestCase;
-import org.apache.lucene.analysis.TokenFilter;
-import org.apache.lucene.analysis.Tokenizer;
-import org.apache.lucene.analysis.icu.ICUNormalizer2Filter;
-import org.apache.lucene.analysis.util.ReusableAnalyzerBase;
-
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.BaseTokenStreamTestCase;
+import org.apache.lucene.analysis.util.ReusableAnalyzerBase;
+import org.apache.lucene.analysis.TokenFilter;
+import org.apache.lucene.analysis.Tokenizer;
+import org.apache.lucene.analysis.icu.ICUNormalizer2Filter;
+
 import java.util.Arrays;
 
 public class TestICUTokenizer extends BaseTokenStreamTestCase {
@@ -219,6 +220,6 @@ public class TestICUTokenizer extends BaseTokenStreamTestCase {
   public void testTypes() throws Exception {
     assertAnalyzesTo(a, "David has 5000 bones", 
         new String[] {"david", "has", "5000", "bones"},
-        new String[] { "<ALPHANUM>", "<ALPHANUM>", "<NUM>", "<ALPHANUM>" });
+        new String[] { "<WORD>", "<WORD>", "<NUM>", "<WORD>" });
   }
 }

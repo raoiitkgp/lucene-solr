@@ -202,8 +202,8 @@ class LuceneRegexFragmenter implements Fragmenter
     currentNumFrags = 1;
     currentOffset = 0;
     addHotSpots(originalText);
-    posIncAtt = tokenStream.getAttribute(PositionIncrementAttribute.class);
-    offsetAtt = tokenStream.getAttribute(OffsetAttribute.class);
+    posIncAtt = (PositionIncrementAttribute) tokenStream.getAttribute(PositionIncrementAttribute.class);
+    offsetAtt = (OffsetAttribute) tokenStream.getAttribute(OffsetAttribute.class);
   }
 
   ////////////////////////////////////

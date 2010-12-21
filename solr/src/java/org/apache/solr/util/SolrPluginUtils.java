@@ -127,7 +127,6 @@ public class SolrPluginUtils {
    * Returns the param, or the default if it's empty or not specified.
    * @deprecated use SolrParam.get(String,String)
    */
-  @Deprecated
   public static String getParam(SolrQueryRequest req,
                                 String param, String def) {
 
@@ -145,7 +144,6 @@ public class SolrPluginUtils {
    * there or if it's not a number.
    * @deprecated use SolrParam.getFloat(String,float)
    */
-  @Deprecated
   public static Number getNumberParam(SolrQueryRequest req,
                                       String param, Number def) {
 
@@ -167,7 +165,6 @@ public class SolrPluginUtils {
    * any other non-empty string is true.
    * @deprecated use SolrParam.getBool(String,boolean)
    */
-  @Deprecated
   public static boolean getBooleanParam(SolrQueryRequest req,
                                        String param, boolean def) {
     String v = req.getParam(param);
@@ -369,7 +366,7 @@ public class SolrPluginUtils {
       String otherQueryS = req.getParams().get(CommonParams.EXPLAIN_OTHER);
       if (otherQueryS != null && otherQueryS.length() > 0) {
         DocList otherResults = doSimpleQuery
-                (otherQueryS, req, 0, 10);
+                (otherQueryS, req.getSearcher(), req.getSchema(), 0, 10);
         dbg.add("otherQuery", otherQueryS);
         NamedList<Explanation> explainO
                 = getExplanations(query, otherResults, searcher, schema);
@@ -470,30 +467,26 @@ public class SolrPluginUtils {
   }
 
   /**
-   * Executes a basic query
+   * Executes a basic query in lucene syntax
    */
   public static DocList doSimpleQuery(String sreq,
-                                      SolrQueryRequest req,
+                                      SolrIndexSearcher searcher,
+                                      IndexSchema schema,
                                       int start, int limit) throws IOException {
     List<String> commands = StrUtils.splitSmart(sreq,';');
 
     String qs = commands.size() >= 1 ? commands.get(0) : "";
-    try {
-    Query query = QParser.getParser(qs, null, req).getQuery();
+    Query query = QueryParsing.parseQuery(qs, schema);
 
     // If the first non-query, non-filter command is a simple sort on an indexed field, then
     // we can use the Lucene sort ability.
     Sort sort = null;
     if (commands.size() >= 2) {
-      sort = QueryParsing.parseSort(commands.get(1), req);
+      sort = QueryParsing.parseSort(commands.get(1), schema);
     }
 
-    DocList results = req.getSearcher().getDocList(query,(DocSet)null, sort, start, limit);
+    DocList results = searcher.getDocList(query,(DocSet)null, sort, start, limit);
     return results;
-    } catch (ParseException e) {
-      throw new SolrException(SolrException.ErrorCode.BAD_REQUEST, "Error parsing query: " + qs);
-    }
-
   }
 
   /**
@@ -546,7 +539,6 @@ public class SolrPluginUtils {
    * @see #parseFieldBoosts
    * @deprecated
    */
-  @Deprecated
   public static List<Query> parseFuncs(IndexSchema s, String in)
     throws ParseException {
 
@@ -596,7 +588,7 @@ public class SolrPluginUtils {
   public static void setMinShouldMatch(BooleanQuery q, String spec) {
 
     int optionalClauses = 0;
-    for (BooleanClause c : q.clauses()) {
+    for (BooleanClause c : (List<BooleanClause>)q.clauses()) {
       if (c.getOccur() == Occur.SHOULD) {
         optionalClauses++;
       }
@@ -663,7 +655,7 @@ public class SolrPluginUtils {
    */
   public static void flattenBooleanQuery(BooleanQuery to, BooleanQuery from) {
 
-    for (BooleanClause clause : from.clauses()) {
+    for (BooleanClause clause : (List<BooleanClause>)from.clauses()) {
 
       Query cq = clause.getQuery();
       cq.setBoost(cq.getBoost() * from.getBoost());
@@ -863,7 +855,7 @@ public class SolrPluginUtils {
     SolrException sortE = null;
     Sort ss = null;
     try {
-      ss = QueryParsing.parseSort(sort, req);
+      ss = QueryParsing.parseSort(sort, req.getSchema());
     } catch (SolrException e) {
       sortE = e;
     }

@@ -176,20 +176,20 @@ public class TestToken extends LuceneTestCase {
     char[] content = "hello".toCharArray();
     t.copyBuffer(content, 0, 5);
     char[] buf = t.buffer();
-    Token copy = assertCloneIsEqual(t);
+    Token copy = (Token) TestSimpleAttributeImpls.assertCloneIsEqual(t);
     assertEquals(t.toString(), copy.toString());
     assertNotSame(buf, copy.buffer());
 
     Payload pl = new Payload(new byte[]{1,2,3,4});
     t.setPayload(pl);
-    copy = assertCloneIsEqual(t);
+    copy = (Token) TestSimpleAttributeImpls.assertCloneIsEqual(t);
     assertEquals(pl, copy.getPayload());
     assertNotSame(pl, copy.getPayload());
   }
   
   public void testCopyTo() throws Exception {
     Token t = new Token();
-    Token copy = assertCopyIsEqual(t);
+    Token copy = (Token) TestSimpleAttributeImpls.assertCopyIsEqual(t);
     assertEquals("", t.toString());
     assertEquals("", copy.toString());
 
@@ -197,13 +197,13 @@ public class TestToken extends LuceneTestCase {
     char[] content = "hello".toCharArray();
     t.copyBuffer(content, 0, 5);
     char[] buf = t.buffer();
-    copy = assertCopyIsEqual(t);
+    copy = (Token) TestSimpleAttributeImpls.assertCopyIsEqual(t);
     assertEquals(t.toString(), copy.toString());
     assertNotSame(buf, copy.buffer());
 
     Payload pl = new Payload(new byte[]{1,2,3,4});
     t.setPayload(pl);
-    copy = assertCopyIsEqual(t);
+    copy = (Token) TestSimpleAttributeImpls.assertCopyIsEqual(t);
     assertEquals(pl, copy.getPayload());
     assertNotSame(pl, copy.getPayload());
   }
@@ -239,22 +239,5 @@ public class TestToken extends LuceneTestCase {
       ts.addAttribute(PositionIncrementAttribute.class) instanceof Token);
     assertTrue("TypeAttribute is not implemented by Token",
       ts.addAttribute(TypeAttribute.class) instanceof Token);
-  }
-
-  public static <T extends AttributeImpl> T assertCloneIsEqual(T att) {
-    @SuppressWarnings("unchecked")
-    T clone = (T) att.clone();
-    assertEquals("Clone must be equal", att, clone);
-    assertEquals("Clone's hashcode must be equal", att.hashCode(), clone.hashCode());
-    return clone;
-  }
-
-  public static <T extends AttributeImpl> T assertCopyIsEqual(T att) throws Exception {
-    @SuppressWarnings("unchecked")
-    T copy = (T) att.getClass().newInstance();
-    att.copyTo(copy);
-    assertEquals("Copied instance must be equal", att, copy);
-    assertEquals("Copied instance's hashcode must be equal", att.hashCode(), copy.hashCode());
-    return copy;
   }
 }

@@ -41,7 +41,6 @@ public class SuggestWordFrequencyComparator implements Comparator<SuggestWord> {
     if (first.score < second.score) {
       return -1;
     }
-    // third criteria: term text
-    return second.string.compareTo(first.string);
+    return 0;
   }
 }

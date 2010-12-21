@@ -69,10 +69,11 @@ public final class FrenchAnalyzer extends StopwordAnalyzerBase {
 
   /**
    * Extended list of typical French stopwords.
-   * @deprecated (3.1) remove in Lucene 5.0 (index bw compat)
+   * @deprecated use {@link #getDefaultStopSet()} instead
    */
+  // TODO make this private in 3.1, remove in 4.0
   @Deprecated
-  private final static String[] FRENCH_STOP_WORDS = {
+  public final static String[] FRENCH_STOP_WORDS = {
     "a", "afin", "ai", "ainsi", "après", "attendu", "au", "aujourd", "auquel", "aussi",
     "autre", "autres", "aux", "auxquelles", "auxquels", "avait", "avant", "avec", "avoir",
     "c", "car", "ce", "ceci", "cela", "celle", "celles", "celui", "cependant", "certain",
@@ -103,7 +104,8 @@ public final class FrenchAnalyzer extends StopwordAnalyzerBase {
   /**
    * Contains words that should be indexed but not stemmed.
    */
-  private final Set<?> excltable;
+  //TODO make this final in 3.0
+  private Set<?> excltable = Collections.<Object>emptySet();
 
   /**
    * Returns an unmodifiable instance of the default stop-words set.
@@ -114,7 +116,7 @@ public final class FrenchAnalyzer extends StopwordAnalyzerBase {
   }
   
   private static class DefaultSetHolder {
-    /** @deprecated (3.1) remove this in Lucene 5.0, index bw compat */
+    /** @deprecated remove this in Lucene 4.0 */
     @Deprecated
     static final Set<?> DEFAULT_STOP_SET_30 = CharArraySet
         .unmodifiableSet(new CharArraySet(Version.LUCENE_CURRENT, Arrays.asList(FRENCH_STOP_WORDS),
@@ -169,6 +171,57 @@ public final class FrenchAnalyzer extends StopwordAnalyzerBase {
     this.excltable = CharArraySet.unmodifiableSet(CharArraySet
         .copy(matchVersion, stemExclutionSet));
   }
+ 
+
+  /**
+   * Builds an analyzer with the given stop words.
+   * @deprecated use {@link #FrenchAnalyzer(Version, Set)} instead
+   */
+  @Deprecated
+  public FrenchAnalyzer(Version matchVersion, String... stopwords) {
+    this(matchVersion, StopFilter.makeStopSet(matchVersion, stopwords));
+  }
+
+  /**
+   * Builds an analyzer with the given stop words.
+   * @throws IOException
+   * @deprecated use {@link #FrenchAnalyzer(Version, Set)} instead
+   */
+  @Deprecated
+  public FrenchAnalyzer(Version matchVersion, File stopwords) throws IOException {
+    this(matchVersion, WordlistLoader.getWordSet(stopwords));
+  }
+
+  /**
+   * Builds an exclusionlist from an array of Strings.
+   * @deprecated use {@link #FrenchAnalyzer(Version, Set, Set)} instead
+   */
+  @Deprecated
+  public void setStemExclusionTable(String... exclusionlist) {
+    excltable = StopFilter.makeStopSet(matchVersion, exclusionlist);
+    setPreviousTokenStream(null); // force a new stemmer to be created
+  }
+
+  /**
+   * Builds an exclusionlist from a Map.
+   * @deprecated use {@link #FrenchAnalyzer(Version, Set, Set)} instead
+   */
+  @Deprecated
+  public void setStemExclusionTable(Map<?,?> exclusionlist) {
+    excltable = new HashSet<Object>(exclusionlist.keySet());
+    setPreviousTokenStream(null); // force a new stemmer to be created
+  }
+
+  /**
+   * Builds an exclusionlist from the words contained in the given file.
+   * @throws IOException
+   * @deprecated use {@link #FrenchAnalyzer(Version, Set, Set)} instead
+   */
+  @Deprecated
+  public void setStemExclusionTable(File exclusionlist) throws IOException {
+    excltable = new HashSet<Object>(WordlistLoader.getWordSet(exclusionlist));
+    setPreviousTokenStream(null); // force a new stemmer to be created
+  }
 
   /**
    * Creates
@@ -187,7 +240,7 @@ public final class FrenchAnalyzer extends StopwordAnalyzerBase {
       Reader reader) {
     if (matchVersion.onOrAfter(Version.LUCENE_31)) {
       final Tokenizer source = new StandardTokenizer(matchVersion, reader);
-      TokenStream result = new StandardFilter(matchVersion, source);
+      TokenStream result = new StandardFilter(source);
       result = new ElisionFilter(matchVersion, result);
       result = new LowerCaseFilter(matchVersion, result);
       result = new StopFilter(matchVersion, result, stopwords);
@@ -197,7 +250,7 @@ public final class FrenchAnalyzer extends StopwordAnalyzerBase {
       return new TokenStreamComponents(source, result);
     } else {
       final Tokenizer source = new StandardTokenizer(matchVersion, reader);
-      TokenStream result = new StandardFilter(matchVersion, source);
+      TokenStream result = new StandardFilter(source);
       result = new StopFilter(matchVersion, result, stopwords);
       if(!excltable.isEmpty())
         result = new KeywordMarkerFilter(result, excltable);

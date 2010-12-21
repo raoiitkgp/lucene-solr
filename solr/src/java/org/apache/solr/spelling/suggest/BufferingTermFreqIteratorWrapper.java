@@ -21,6 +21,7 @@ public class BufferingTermFreqIteratorWrapper implements TermFreqIterator {
       this.freq = freq;
     }
     
+    @Override
     public int compareTo(Entry o) {
       return word.compareTo(o.word);
     }    
@@ -41,20 +42,24 @@ public class BufferingTermFreqIteratorWrapper implements TermFreqIterator {
     curPos = 0;
   }
 
+  @Override
   public float freq() {
     return curEntry.freq;
   }
 
+  @Override
   public boolean hasNext() {
     return curPos < entries.size();
   }
 
+  @Override
   public String next() {
     curEntry = entries.get(curPos);
     curPos++;
     return curEntry.word;
   }
 
+  @Override
   public void remove() {
     throw new UnsupportedOperationException("remove is not supported");
   }

@@ -17,7 +17,6 @@ package org.apache.lucene.analysis.tokenattributes;
  * limitations under the License.
  */
 
-import org.apache.lucene.analysis.TestToken;
 import org.apache.lucene.util.LuceneTestCase;
 import java.nio.CharBuffer;
 import java.util.Formatter;
@@ -92,7 +91,7 @@ public class TestCharTermAttributeImpl extends LuceneTestCase {
     char[] content = "hello".toCharArray();
     t.copyBuffer(content, 0, 5);
     char[] buf = t.buffer();
-    CharTermAttributeImpl copy = TestToken.assertCloneIsEqual(t);
+    CharTermAttributeImpl copy = (CharTermAttributeImpl) TestSimpleAttributeImpls.assertCloneIsEqual(t);
     assertEquals(t.toString(), copy.toString());
     assertNotSame(buf, copy.buffer());
   }
@@ -114,7 +113,7 @@ public class TestCharTermAttributeImpl extends LuceneTestCase {
   
   public void testCopyTo() throws Exception {
     CharTermAttributeImpl t = new CharTermAttributeImpl();
-    CharTermAttributeImpl copy = TestToken.assertCopyIsEqual(t);
+    CharTermAttributeImpl copy = (CharTermAttributeImpl) TestSimpleAttributeImpls.assertCopyIsEqual(t);
     assertEquals("", t.toString());
     assertEquals("", copy.toString());
 
@@ -122,7 +121,7 @@ public class TestCharTermAttributeImpl extends LuceneTestCase {
     char[] content = "hello".toCharArray();
     t.copyBuffer(content, 0, 5);
     char[] buf = t.buffer();
-    copy = TestToken.assertCopyIsEqual(t);
+    copy = (CharTermAttributeImpl) TestSimpleAttributeImpls.assertCopyIsEqual(t);
     assertEquals(t.toString(), copy.toString());
     assertNotSame(buf, copy.buffer());
   }

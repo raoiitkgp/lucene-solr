@@ -143,7 +143,6 @@ public class ClientUtils
   /**
    * @deprecated Use {@link org.apache.solr.common.util.DateUtil#DEFAULT_DATE_FORMATS}
    */
-  @Deprecated
   public static final Collection<String> fmts = DateUtil.DEFAULT_DATE_FORMATS;
 
   /**
@@ -154,7 +153,6 @@ public class ClientUtils
    *
    * @deprecated Use {@link org.apache.solr.common.util.DateUtil#parseDate(String)}
    */
-  @Deprecated
   public static Date parseDate( String d ) throws ParseException, DateParseException
   {
     return DateUtil.parseDate(d);
@@ -166,7 +164,6 @@ public class ClientUtils
    *
    * @deprecated use {@link org.apache.solr.common.util.DateUtil#getThreadLocalDateFormat()}
    */
-  @Deprecated
   public static DateFormat getThreadLocalDateFormat() {
 
     return DateUtil.getThreadLocalDateFormat();
@@ -175,7 +172,6 @@ public class ClientUtils
   /**
    * @deprecated Use {@link org.apache.solr.common.util.DateUtil#UTC}.
    */
-  @Deprecated
   public static TimeZone UTC = DateUtil.UTC;
 
 

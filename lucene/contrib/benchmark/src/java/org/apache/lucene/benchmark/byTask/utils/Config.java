@@ -319,7 +319,7 @@ public class Config {
       String t = st.nextToken();
       a.add(t);
     }
-    return a.toArray(new String[a.size()]);
+    return (String[]) a.toArray(new String[a.size()]);
   }
 
   // extract properties to array, e.g. for "10:100:5" return int[]{10,100,5}. 

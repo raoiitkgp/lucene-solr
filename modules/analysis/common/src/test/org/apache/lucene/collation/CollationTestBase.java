@@ -167,16 +167,11 @@ public abstract class CollationTestBase extends LuceneTestCase {
   // Copied (and slightly modified) from 
   // org.apache.lucene.search.TestSort.testInternationalSort()
   //  
-  // TODO: this test is really fragile. there are already 3 different cases,
-  // depending upon unicode version.
   public void testCollationKeySort(Analyzer usAnalyzer,
                                    Analyzer franceAnalyzer,
                                    Analyzer swedenAnalyzer,
                                    Analyzer denmarkAnalyzer,
-                                   String usResult,
-                                   String frResult,
-                                   String svResult,
-                                   String dkResult) throws Exception {
+                                   String usResult) throws Exception {
     RAMDirectory indexStore = new RAMDirectory();
     IndexWriter writer = new IndexWriter(indexStore, new IndexWriterConfig(
         TEST_VERSION_CURRENT, new MockAnalyzer(MockTokenizer.WHITESPACE, false)));
@@ -225,13 +220,13 @@ public abstract class CollationTestBase extends LuceneTestCase {
     assertMatches(searcher, queryY, sort, usResult);
 
     sort.setSort(new SortField("France", SortField.STRING));
-    assertMatches(searcher, queryX, sort, frResult);
+    assertMatches(searcher, queryX, sort, "EACGI");
 
     sort.setSort(new SortField("Sweden", SortField.STRING));
-    assertMatches(searcher, queryY, sort, svResult);
+    assertMatches(searcher, queryY, sort, "BJDFH");
 
     sort.setSort(new SortField("Denmark", SortField.STRING));
-    assertMatches(searcher, queryY, sort, dkResult);
+    assertMatches(searcher, queryY, sort, "BJDHF");
   }
     
   // Make sure the documents returned by the search match the expected list

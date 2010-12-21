@@ -38,7 +38,6 @@ public class HHMMSegmenter {
    * @param sentence input sentence, without start and end markers
    * @return {@link SegGraph} corresponding to the input sentence.
    */
-  @SuppressWarnings("fallthrough")
   private SegGraph createSegGraph(String sentence) {
     int i = 0, j;
     int length = sentence.length();
@@ -101,7 +100,7 @@ public class HHMMSegmenter {
           i++;
           break;
         case CharType.FULLWIDTH_LETTER:
-          hasFullWidth = true; /* intentional fallthrough */
+          hasFullWidth = true;
         case CharType.LETTER:
           j = i + 1;
           while (j < length
@@ -119,7 +118,7 @@ public class HHMMSegmenter {
           i = j;
           break;
         case CharType.FULLWIDTH_DIGIT:
-          hasFullWidth = true; /* intentional fallthrough */
+          hasFullWidth = true;
         case CharType.DIGIT:
           j = i + 1;
           while (j < length

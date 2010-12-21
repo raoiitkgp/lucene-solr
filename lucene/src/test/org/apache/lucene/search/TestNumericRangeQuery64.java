@@ -17,6 +17,8 @@ package org.apache.lucene.search;
  * limitations under the License.
  */
 
+import java.util.Random;
+
 import org.apache.lucene.analysis.MockAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -46,12 +48,14 @@ public class TestNumericRangeQuery64 extends LuceneTestCase {
   private static Directory directory = null;
   private static IndexReader reader = null;
   private static IndexSearcher searcher = null;
+  private static Random random = null;
   
   @BeforeClass
   public static void beforeClass() throws Exception {
-    directory = newDirectory();
+    random = newStaticRandom(TestNumericRangeQuery64.class);
+    directory = newDirectory(random);
     RandomIndexWriter writer = new RandomIndexWriter(random, directory,
-        newIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer())
+        newIndexWriterConfig(random, TEST_VERSION_CURRENT, new MockAnalyzer())
         .setMaxBufferedDocs(_TestUtil.nextInt(random, 50, 1000)));
     
     NumericField
@@ -87,6 +91,7 @@ public class TestNumericRangeQuery64 extends LuceneTestCase {
       ascfield2.setLongValue(val);
       writer.addDocument(doc);
     }
+  
     reader = writer.getReader();
     searcher=new IndexSearcher(reader);
     writer.close();

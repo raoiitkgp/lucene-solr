@@ -16,17 +16,21 @@ package org.apache.lucene.analysis.core;
  * limitations under the License.
  */
 
+import org.apache.lucene.analysis.BaseTokenStreamTestCase;
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.core.StopFilter;
+import org.apache.lucene.analysis.core.WhitespaceTokenizer;
+import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
+import org.apache.lucene.util.English;
+import org.apache.lucene.util.Version;
+
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Set;
-
-import org.apache.lucene.analysis.BaseTokenStreamTestCase;
-import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
-import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
-import org.apache.lucene.util.English;
-import org.apache.lucene.util.Version;
+import java.util.HashSet;
 
 
 public class TestStopFilter extends BaseTokenStreamTestCase {
@@ -35,7 +39,7 @@ public class TestStopFilter extends BaseTokenStreamTestCase {
 
   public void testExactCase() throws IOException {
     StringReader reader = new StringReader("Now is The Time");
-    Set<String> stopWords = asSet("is", "the", "Time");
+    Set<String> stopWords = new HashSet<String>(Arrays.asList("is", "the", "Time"));
     TokenStream stream = new StopFilter(TEST_VERSION_CURRENT, new WhitespaceTokenizer(TEST_VERSION_CURRENT, reader), stopWords, false);
     final CharTermAttribute termAtt = stream.getAttribute(CharTermAttribute.class);
     assertTrue(stream.incrementToken());
@@ -47,7 +51,7 @@ public class TestStopFilter extends BaseTokenStreamTestCase {
 
   public void testIgnoreCase() throws IOException {
     StringReader reader = new StringReader("Now is The Time");
-    Set<String> stopWords = asSet( "is", "the", "Time" );
+    Set<Object> stopWords = new HashSet<Object>(Arrays.asList( "is", "the", "Time" ));
     TokenStream stream = new StopFilter(TEST_VERSION_CURRENT, new WhitespaceTokenizer(TEST_VERSION_CURRENT, reader), stopWords, true);
     final CharTermAttribute termAtt = stream.getAttribute(CharTermAttribute.class);
     assertTrue(stream.incrementToken());
@@ -85,7 +89,7 @@ public class TestStopFilter extends BaseTokenStreamTestCase {
     Set<Object> stopSet = StopFilter.makeStopSet(TEST_VERSION_CURRENT, stopWords);
     // with increments
     StringReader reader = new StringReader(sb.toString());
-    StopFilter stpf = new StopFilter(Version.LUCENE_40, new WhitespaceTokenizer(TEST_VERSION_CURRENT, reader), stopSet);
+    StopFilter stpf = new StopFilter(Version.LUCENE_24, new WhitespaceTokenizer(TEST_VERSION_CURRENT, reader), stopSet);
     doTestStopPositons(stpf,true);
     // without increments
     reader = new StringReader(sb.toString());

@@ -20,7 +20,6 @@ package org.apache.solr.analysis;
 import java.io.Reader;
 import java.io.StringReader;
 
-import org.apache.lucene.analysis.CharReader;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.Tokenizer;
 
@@ -30,9 +29,7 @@ import org.apache.lucene.analysis.Tokenizer;
 public class TestArabicFilters extends BaseTokenTestCase {
   /**
    * Test ArabicLetterTokenizerFactory
-   * @deprecated (3.1) Remove in Lucene 5.0
    */
-  @Deprecated
   public void testTokenizer() throws Exception {
     Reader reader = new StringReader("الذين مَلكت أيمانكم");
     ArabicLetterTokenizerFactory factory = new ArabicLetterTokenizerFactory();
@@ -46,7 +43,7 @@ public class TestArabicFilters extends BaseTokenTestCase {
    */
   public void testNormalizer() throws Exception {
     Reader reader = new StringReader("الذين مَلكت أيمانكم");
-    StandardTokenizerFactory factory = new StandardTokenizerFactory();
+    ArabicLetterTokenizerFactory factory = new ArabicLetterTokenizerFactory();
     ArabicNormalizationFilterFactory filterFactory = new ArabicNormalizationFilterFactory();
     factory.init(DEFAULT_VERSION_PARAM);
     filterFactory.init(DEFAULT_VERSION_PARAM);
@@ -60,7 +57,7 @@ public class TestArabicFilters extends BaseTokenTestCase {
    */
   public void testStemmer() throws Exception {
     Reader reader = new StringReader("الذين مَلكت أيمانكم");
-    StandardTokenizerFactory factory = new StandardTokenizerFactory();
+    ArabicLetterTokenizerFactory factory = new ArabicLetterTokenizerFactory();
     ArabicNormalizationFilterFactory normFactory = new ArabicNormalizationFilterFactory();
     ArabicStemFilterFactory stemFactory = new ArabicStemFilterFactory();
     factory.init(DEFAULT_VERSION_PARAM);
@@ -69,17 +66,5 @@ public class TestArabicFilters extends BaseTokenTestCase {
     TokenStream stream = normFactory.create(tokenizer);
     stream = stemFactory.create(stream);
     assertTokenStreamContents(stream, new String[] {"ذين", "ملكت", "ايمانكم"});
-  }
-  
-  /**
-   * Test PersianCharFilterFactory
-   */
-  public void testPersianCharFilter() throws Exception {
-    Reader reader = new StringReader("می‌خورد");
-    PersianCharFilterFactory charfilterFactory = new PersianCharFilterFactory();
-    StandardTokenizerFactory tokenizerFactory = new StandardTokenizerFactory();
-    tokenizerFactory.init(DEFAULT_VERSION_PARAM);
-    TokenStream stream = tokenizerFactory.create(charfilterFactory.create(CharReader.get(reader)));
-    assertTokenStreamContents(stream, new String[] { "می", "خورد" });
   }
 }

@@ -93,7 +93,7 @@ public class TestOmitTf extends LuceneTestCase {
     writer.close();
     _TestUtil.checkIndex(ram);
 
-    SegmentReader reader = getOnlySegmentReader(IndexReader.open(ram, false));
+    SegmentReader reader = SegmentReader.getOnlySegmentReader(ram);
     FieldInfos fi = reader.fieldInfos();
     assertTrue("OmitTermFreqAndPositions field bit should be set.", fi.fieldInfo("f1").omitTermFreqAndPositions);
     assertTrue("OmitTermFreqAndPositions field bit should be set.", fi.fieldInfo("f2").omitTermFreqAndPositions);
@@ -107,12 +107,9 @@ public class TestOmitTf extends LuceneTestCase {
   public void testMixedMerge() throws Exception {
     Directory ram = newDirectory();
     Analyzer analyzer = new MockAnalyzer();
-    IndexWriter writer = new IndexWriter(
-        ram,
-        newIndexWriterConfig(TEST_VERSION_CURRENT, analyzer).
-            setMaxBufferedDocs(3).
-            setMergePolicy(newLogMergePolicy(2))
-    );
+    IndexWriter writer = new IndexWriter(ram, newIndexWriterConfig(
+        TEST_VERSION_CURRENT, analyzer).setMaxBufferedDocs(3));
+    ((LogMergePolicy) writer.getConfig().getMergePolicy()).setMergeFactor(2);
     Document d = new Document();
         
     // this field will have Tf
@@ -148,7 +145,7 @@ public class TestOmitTf extends LuceneTestCase {
 
     _TestUtil.checkIndex(ram);
 
-    SegmentReader reader = getOnlySegmentReader(IndexReader.open(ram, false));
+    SegmentReader reader = SegmentReader.getOnlySegmentReader(ram);
     FieldInfos fi = reader.fieldInfos();
     assertTrue("OmitTermFreqAndPositions field bit should be set.", fi.fieldInfo("f1").omitTermFreqAndPositions);
     assertTrue("OmitTermFreqAndPositions field bit should be set.", fi.fieldInfo("f2").omitTermFreqAndPositions);
@@ -163,12 +160,9 @@ public class TestOmitTf extends LuceneTestCase {
   public void testMixedRAM() throws Exception {
     Directory ram = newDirectory();
     Analyzer analyzer = new MockAnalyzer();
-    IndexWriter writer = new IndexWriter(
-        ram,
-        newIndexWriterConfig(TEST_VERSION_CURRENT, analyzer).
-            setMaxBufferedDocs(10).
-            setMergePolicy(newLogMergePolicy(2))
-    );
+    IndexWriter writer = new IndexWriter(ram, newIndexWriterConfig(
+        TEST_VERSION_CURRENT, analyzer).setMaxBufferedDocs(10));
+    ((LogMergePolicy) writer.getConfig().getMergePolicy()).setMergeFactor(2);
     Document d = new Document();
         
     // this field will have Tf
@@ -195,7 +189,7 @@ public class TestOmitTf extends LuceneTestCase {
 
     _TestUtil.checkIndex(ram);
 
-    SegmentReader reader = getOnlySegmentReader(IndexReader.open(ram, false));
+    SegmentReader reader = SegmentReader.getOnlySegmentReader(ram);
     FieldInfos fi = reader.fieldInfos();
     assertTrue("OmitTermFreqAndPositions field bit should not be set.", !fi.fieldInfo("f1").omitTermFreqAndPositions);
     assertTrue("OmitTermFreqAndPositions field bit should be set.", fi.fieldInfo("f2").omitTermFreqAndPositions);
@@ -247,13 +241,10 @@ public class TestOmitTf extends LuceneTestCase {
   public void testBasic() throws Exception {
     Directory dir = newDirectory();  
     Analyzer analyzer = new MockAnalyzer();
-    IndexWriter writer = new IndexWriter(
-        dir,
-        newIndexWriterConfig(TEST_VERSION_CURRENT, analyzer).
-            setMaxBufferedDocs(2).
-            setSimilarity(new SimpleSimilarity()).
-            setMergePolicy(newLogMergePolicy(2))
-    );
+    IndexWriter writer = new IndexWriter(dir, newIndexWriterConfig(
+        TEST_VERSION_CURRENT, analyzer).setMaxBufferedDocs(2)
+        .setSimilarity(new SimpleSimilarity()));
+    ((LogMergePolicy) writer.getConfig().getMergePolicy()).setMergeFactor(2);
         
     StringBuilder sb = new StringBuilder(265);
     String term = "term";

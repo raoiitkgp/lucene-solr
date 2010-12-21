@@ -81,7 +81,7 @@ public class SolrDeletionPolicy implements IndexDeletionPolicy, NamedListInitial
 
       if (dir instanceof FSDirectory) {
         FSDirectory fsd = (FSDirectory) dir;
-        sb.append("dir=").append(fsd.getDirectory());
+        sb.append("dir=").append(fsd.getFile());
       } else {
         sb.append("dir=").append(dir);
       }
@@ -183,7 +183,7 @@ public class SolrDeletionPolicy implements IndexDeletionPolicy, NamedListInitial
     // be the same, regardless of the Directory instance.
     if (dir instanceof FSDirectory) {
       FSDirectory fsd = (FSDirectory) dir;
-      File fdir = fsd.getDirectory();
+      File fdir = fsd.getFile();
       sb.append(fdir.getPath());
     } else {
       sb.append(dir);

@@ -17,15 +17,16 @@ package org.apache.lucene.analysis.cjk;
  * limitations under the License.
  */
 
-import java.io.IOException;
-import java.io.Reader;
-import java.util.Set;
-
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.Tokenizer;
 import org.apache.lucene.analysis.core.StopFilter;
+import org.apache.lucene.analysis.util.CharArraySet;
 import org.apache.lucene.analysis.util.StopwordAnalyzerBase;
 import org.apache.lucene.util.Version;
+
+import java.io.Reader;
+import java.util.Arrays;
+import java.util.Set;
 
 
 /**
@@ -34,13 +35,28 @@ import org.apache.lucene.util.Version;
  *
  */
 public final class CJKAnalyzer extends StopwordAnalyzerBase {
+  //~ Static fields/initializers ---------------------------------------------
+
   /**
-   * File containing default CJK stopwords.
-   * <p/>
-   * Currently it concains some common English words that are not usually
+   * An array containing some common English words that are not usually
    * useful for searching and some double-byte interpunctions.
+   * @deprecated use {@link #getDefaultStopSet()} instead
    */
-  public final static String DEFAULT_STOPWORD_FILE = "stopwords.txt";
+  // TODO make this final in 3.1 -
+  // this might be revised and merged with StopFilter stop words too
+  @Deprecated
+  public final static String[] STOP_WORDS = {
+    "a", "and", "are", "as", "at", "be",
+    "but", "by", "for", "if", "in",
+    "into", "is", "it", "no", "not",
+    "of", "on", "or", "s", "such", "t",
+    "that", "the", "their", "then",
+    "there", "these", "they", "this",
+    "to", "was", "will", "with", "",
+    "www"
+  };
+
+  //~ Instance fields --------------------------------------------------------
 
   /**
    * Returns an unmodifiable instance of the default stop-words set.
@@ -51,18 +67,12 @@ public final class CJKAnalyzer extends StopwordAnalyzerBase {
   }
   
   private static class DefaultSetHolder {
-    static final Set<?> DEFAULT_STOP_SET;
-
-    static {
-      try {
-        DEFAULT_STOP_SET = loadStopwordSet(false, CJKAnalyzer.class, DEFAULT_STOPWORD_FILE, "#");
-      } catch (IOException ex) {
-        // default set should always be present as it is part of the
-        // distribution (JAR)
-        throw new RuntimeException("Unable to load default stopword set");
-      }
-    }
+    static final Set<?> DEFAULT_STOP_SET = CharArraySet
+        .unmodifiableSet(new CharArraySet(Version.LUCENE_CURRENT, Arrays.asList(STOP_WORDS),
+            false));
   }
+
+  //~ Constructors -----------------------------------------------------------
 
   /**
    * Builds an analyzer which removes words in {@link #STOP_WORDS}.
@@ -82,6 +92,19 @@ public final class CJKAnalyzer extends StopwordAnalyzerBase {
   public CJKAnalyzer(Version matchVersion, Set<?> stopwords){
     super(matchVersion, stopwords);
   }
+
+  /**
+   * Builds an analyzer which removes words in the provided array.
+   *
+   * @param stopWords stop word array
+   * @deprecated use {@link #CJKAnalyzer(Version, Set)} instead
+   */
+  @Deprecated
+  public CJKAnalyzer(Version matchVersion, String... stopWords) {
+    super(matchVersion, StopFilter.makeStopSet(matchVersion, stopWords));
+  }
+
+  //~ Methods ----------------------------------------------------------------
 
   @Override
   protected TokenStreamComponents createComponents(String fieldName,

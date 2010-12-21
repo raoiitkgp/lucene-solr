@@ -52,9 +52,9 @@ public class TestTermScorer extends LuceneTestCase {
               Field.Index.ANALYZED));
       writer.addDocument(doc);
     }
-    indexReader = new SlowMultiReaderWrapper(writer.getReader());
+    indexReader = writer.getReader();
     writer.close();
-    indexSearcher = new IndexSearcher(indexReader);
+    indexSearcher = new IndexSearcher(SlowMultiReaderWrapper.wrap(indexReader));
   }
   
   @Override

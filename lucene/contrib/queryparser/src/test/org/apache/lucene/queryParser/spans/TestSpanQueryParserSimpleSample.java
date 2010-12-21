@@ -113,9 +113,9 @@ public class TestSpanQueryParserSimpleSample extends LuceneTestCase {
     QueryNodeProcessorPipeline spanProcessorPipeline = new QueryNodeProcessorPipeline(
         spanQueryConfigHandler);
     // @see SpansValidatorQueryNodeProcessor
-    spanProcessorPipeline.add(new SpansValidatorQueryNodeProcessor());
+    spanProcessorPipeline.addProcessor(new SpansValidatorQueryNodeProcessor());
     // @see UniqueFieldQueryNodeProcessor
-    spanProcessorPipeline.add(new UniqueFieldQueryNodeProcessor());
+    spanProcessorPipeline.addProcessor(new UniqueFieldQueryNodeProcessor());
 
     // print to show out the QueryNode tree before being processed
     if (VERBOSE) System.out.println(queryTree);

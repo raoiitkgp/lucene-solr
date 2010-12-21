@@ -79,7 +79,8 @@ public class BinaryField extends FieldType  {
       len = buf.length;
     }
 
-    Field f = new Field(field.getName(), buf, offset, len);
+    Field f = new Field(field.getName(), buf, offset, len,
+            getFieldStore(field, null));
     f.setBoost(boost);
     return f;
   }

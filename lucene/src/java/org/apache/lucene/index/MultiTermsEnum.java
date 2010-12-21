@@ -91,13 +91,6 @@ public final class MultiTermsEnum extends TermsEnum {
   }
 
   @Override
-  public void cacheCurrentTerm() throws IOException {
-    for(int i=0;i<numTop;i++) {
-      top[i].terms.cacheCurrentTerm();
-    }
-  }
-
-  @Override
   public Comparator<BytesRef> getComparator() {
     return termComp;
   }
@@ -220,7 +213,7 @@ public final class MultiTermsEnum extends TermsEnum {
     throw new UnsupportedOperationException();
   }
 
-  private void pullTop() {
+  private final void pullTop() {
     // extract all subs from the queue that have the same
     // top term
     assert numTop == 0;
@@ -233,7 +226,7 @@ public final class MultiTermsEnum extends TermsEnum {
     current = top[0].current;
   }
 
-  private void pushTop() throws IOException {
+  private final void pushTop() throws IOException {
     // call next() on each top, and put back into queue
     for(int i=0;i<numTop;i++) {
       top[i].current = top[i].terms.next();
@@ -425,7 +418,7 @@ public final class MultiTermsEnum extends TermsEnum {
     }
 
     @Override
-    protected boolean lessThan(TermsEnumWithSlice termsA, TermsEnumWithSlice termsB) {
+    protected final boolean lessThan(TermsEnumWithSlice termsA, TermsEnumWithSlice termsB) {
       final int cmp = termComp.compare(termsA.current, termsB.current);
       if (cmp != 0) {
         return cmp < 0;

@@ -189,13 +189,13 @@ public class TestAtomicUpdate extends LuceneTestCase {
     Directory directory;
 
     // First in a RAM directory:
-    directory = new MockDirectoryWrapper(random, new RAMDirectory());
+    directory = new MockDirectoryWrapper(new RAMDirectory());
     runTest(directory);
     directory.close();
 
     // Second in an FSDirectory:
     File dirPath = _TestUtil.getTempDir("lucene.test.atomic");
-    directory = newFSDirectory(dirPath);
+    directory = FSDirectory.open(dirPath);
     runTest(directory);
     directory.close();
     _TestUtil.rmDir(dirPath);

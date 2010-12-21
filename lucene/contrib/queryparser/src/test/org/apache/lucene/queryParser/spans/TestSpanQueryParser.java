@@ -117,9 +117,11 @@ public class TestSpanQueryParser extends LuceneTestCase {
     this.spanProcessorPipeline
         .setQueryConfigHandler(this.spanQueryConfigHandler);
 
-    this.spanProcessorPipeline.add(new WildcardQueryNodeProcessor());
-    this.spanProcessorPipeline.add(new SpansValidatorQueryNodeProcessor());
-    this.spanProcessorPipeline.add(new UniqueFieldQueryNodeProcessor());
+    this.spanProcessorPipeline.addProcessor(new WildcardQueryNodeProcessor());
+    this.spanProcessorPipeline
+        .addProcessor(new SpansValidatorQueryNodeProcessor());
+    this.spanProcessorPipeline
+        .addProcessor(new UniqueFieldQueryNodeProcessor());
 
   }
 

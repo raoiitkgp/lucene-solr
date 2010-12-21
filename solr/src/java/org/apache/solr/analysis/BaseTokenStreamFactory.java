@@ -57,8 +57,7 @@ abstract class BaseTokenStreamFactory {
     return args;
   }
   
-  /** this method can be called in the {@link TokenizerFactory#create(java.io.Reader)} 
-   * or {@link TokenFilterFactory#create(org.apache.lucene.analysis.TokenStream)} methods,
+  /** this method can be called in the {@link #create} method,
    * to inform user, that for this factory a {@link #luceneMatchVersion} is required */
   protected final void assureMatchVersion() {
     if (luceneMatchVersion == null) {

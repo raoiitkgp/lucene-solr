@@ -28,9 +28,8 @@ package org.apache.lucene.spatial.tier.projections;
  * flux and might change in incompatible ways in the next
  * release.</font>
  *
- * @deprecated (3.1) Until we can put in place proper tests and a proper fix. 
+ * @deprecated Until we can put in place proper tests and a proper fix. 
  */
-@Deprecated
 public class SinusoidalProjector implements IProjector {
 
 

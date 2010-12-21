@@ -73,7 +73,6 @@ public class TestICUCollationKeyAnalyzer extends CollationTestBase {
     // The ICU Collator and java.text.Collator implementations differ in their
     // orderings - "BFJHD" is the ordering for the ICU Collator for Locale.US.
     testCollationKeySort
-    (usAnalyzer, franceAnalyzer, swedenAnalyzer, denmarkAnalyzer, 
-     "BFJHD", "ECAGI", "BJDFH", "BJDHF");
+      (usAnalyzer, franceAnalyzer, swedenAnalyzer, denmarkAnalyzer, "BFJHD");
   }
 }

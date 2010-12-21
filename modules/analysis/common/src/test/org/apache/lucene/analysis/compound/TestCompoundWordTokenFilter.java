@@ -17,9 +17,9 @@ package org.apache.lucene.analysis.compound;
  * limitations under the License.
  */
 
+import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
-import org.xml.sax.InputSource;
 
 import org.apache.lucene.analysis.BaseTokenStreamTestCase;
 import org.apache.lucene.analysis.Tokenizer;
@@ -31,9 +31,10 @@ public class TestCompoundWordTokenFilter extends BaseTokenStreamTestCase {
   public void testHyphenationCompoundWordsDA() throws Exception {
     String[] dict = { "læse", "hest" };
 
-    InputSource is = new InputSource(getClass().getResource("da_UTF8.xml").toExternalForm());
+    Reader reader = getHyphenationReader();
+
     HyphenationTree hyphenator = HyphenationCompoundWordTokenFilter
-        .getHyphenationTree(is);
+        .getHyphenationTree(reader);
 
     HyphenationCompoundWordTokenFilter tf = new HyphenationCompoundWordTokenFilter(TEST_VERSION_CURRENT, 
         new WhitespaceTokenizer(TEST_VERSION_CURRENT, new StringReader(
@@ -49,10 +50,10 @@ public class TestCompoundWordTokenFilter extends BaseTokenStreamTestCase {
 
   public void testHyphenationCompoundWordsDELongestMatch() throws Exception {
     String[] dict = { "basketball", "basket", "ball", "kurv" };
+    Reader reader = getHyphenationReader();
 
-    InputSource is = new InputSource(getClass().getResource("da_UTF8.xml").toExternalForm());
     HyphenationTree hyphenator = HyphenationCompoundWordTokenFilter
-        .getHyphenationTree(is);
+        .getHyphenationTree(reader);
 
     // the word basket will not be added due to the longest match option
     HyphenationCompoundWordTokenFilter tf = new HyphenationCompoundWordTokenFilter(TEST_VERSION_CURRENT, 
@@ -72,9 +73,9 @@ public class TestCompoundWordTokenFilter extends BaseTokenStreamTestCase {
    * This can be controlled with the min/max subword size.
    */
   public void testHyphenationOnly() throws Exception {
-    InputSource is = new InputSource(getClass().getResource("da_UTF8.xml").toExternalForm());
+    Reader reader = getHyphenationReader();
     HyphenationTree hyphenator = HyphenationCompoundWordTokenFilter
-        .getHyphenationTree(is);
+      .getHyphenationTree(reader);
     
     HyphenationCompoundWordTokenFilter tf = new HyphenationCompoundWordTokenFilter(
         TEST_VERSION_CURRENT,
@@ -184,4 +185,7 @@ public class TestCompoundWordTokenFilter extends BaseTokenStreamTestCase {
     assertEquals("Rindfleischüberwachungsgesetz", termAtt.toString());
   }
 
+  private Reader getHyphenationReader() throws Exception {
+    return new InputStreamReader(getClass().getResourceAsStream("da_UTF8.xml"), "UTF-8");
+  }
 }

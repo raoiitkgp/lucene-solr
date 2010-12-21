@@ -23,12 +23,10 @@ import java.util.*;
 
 import javax.sql.DataSource;
 
+import org.apache.solr.SolrTestCaseJ4;
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.*;
 
 /**
  * <p>
@@ -42,7 +40,7 @@ import org.junit.Test;
  * @version $Id$
  * @since solr 1.3
  */
-public class TestJdbcDataSource extends AbstractDataImportHandlerTestCase {
+public class TestJdbcDataSource extends SolrTestCaseJ4 {
   Driver driver;
   DataSource dataSource;
   Connection connection;
@@ -80,7 +78,7 @@ public class TestJdbcDataSource extends AbstractDataImportHandlerTestCase {
   }
 
   @Test
-  public void testRetrieveFromJndi() throws Exception {
+  public void retrieveFromJndi() throws Exception {
     MockInitialContextFactory.bind("java:comp/env/jdbc/JndiDB", dataSource);
 
     props.put(JdbcDataSource.JNDI_NAME, "java:comp/env/jdbc/JndiDB");
@@ -96,11 +94,11 @@ public class TestJdbcDataSource extends AbstractDataImportHandlerTestCase {
 
     mockControl.verify();
 
-    assertSame("connection", conn, connection);
+    Assert.assertSame("connection", conn, connection);
   }
 
   @Test
-  public void testRetrieveFromJndiWithCredentials() throws Exception {
+  public void retrieveFromJndiWithCredentials() throws Exception {
     MockInitialContextFactory.bind("java:comp/env/jdbc/JndiDB", dataSource);
 
     props.put(JdbcDataSource.JNDI_NAME, "java:comp/env/jdbc/JndiDB");
@@ -120,11 +118,11 @@ public class TestJdbcDataSource extends AbstractDataImportHandlerTestCase {
 
     mockControl.verify();
 
-    assertSame("connection", conn, connection);
+    Assert.assertSame("connection", conn, connection);
   }
 
   @Test
-  public void testRetrieveFromDriverManager() throws Exception {
+  public void retrieveFromDriverManager() throws Exception {
     DriverManager.registerDriver(driver);
 
     EasyMock.expect(
@@ -143,12 +141,12 @@ public class TestJdbcDataSource extends AbstractDataImportHandlerTestCase {
 
     mockControl.verify();
 
-    assertSame("connection", conn, connection);
+    Assert.assertSame("connection", conn, connection);
   }
 
   @Test
-  @Ignore("Needs a Mock database server to work")
-  public void testBasic() throws Exception {
+  @Ignore
+  public void basic() throws Exception {
     JdbcDataSource dataSource = new JdbcDataSource();
     Properties p = new Properties();
     p.put("driver", "com.mysql.jdbc.Driver");
@@ -166,7 +164,7 @@ public class TestJdbcDataSource extends AbstractDataImportHandlerTestCase {
     f.put("type", "float");
     flds.add(f);
 
-    Context c = getContext(null, null,
+    Context c = AbstractDataImportHandlerTestCase.getContext(null, null,
             dataSource, Context.FULL_DUMP, flds, null);
     dataSource.init(c, p);
     Iterator<Map<String, Object>> i = dataSource
@@ -180,8 +178,8 @@ public class TestJdbcDataSource extends AbstractDataImportHandlerTestCase {
       trim_id = map.get("trim_id");
       count++;
     }
-    assertEquals(5, count);
-    assertEquals(Float.class, msrp.getClass());
-    assertEquals(Long.class, trim_id.getClass());
+    Assert.assertEquals(5, count);
+    Assert.assertEquals(Float.class, msrp.getClass());
+    Assert.assertEquals(Long.class, trim_id.getClass());
   }
 }

@@ -28,10 +28,10 @@ import java.util.regex.Pattern;
 
 /**
  * <p>
- * A {@link Transformer} instance which can extract numbers out of strings. It uses
- * {@link NumberFormat} class to parse strings and supports
+ * A Transformer instance which can extract numbers out of strings. It uses
+ * <code>java.text.NumberFormat</code> class to parse strings and supports
  * Number, Integer, Currency and Percent styles as supported by
- * {@link NumberFormat} with configurable locales.
+ * <code>java.text.NumberFormat</code> with configurable locales.
  * </p>
  * <p/>
  * <p>

@@ -22,9 +22,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import junit.framework.Assert;
+
+import org.apache.solr.SolrTestCaseJ4;
 import org.junit.Test;
 
-public class TestURLDataSource extends AbstractDataImportHandlerTestCase {
+public class TestURLDataSource extends SolrTestCaseJ4 {
   private List<Map<String, String>> fields = new ArrayList<Map<String, String>>();
   private URLDataSource dataSource = new URLDataSource();
   private VariableResolverImpl variableResolver = new VariableResolverImpl();
@@ -40,6 +43,6 @@ public class TestURLDataSource extends AbstractDataImportHandlerTestCase {
     
     initProps.setProperty(URLDataSource.BASE_URL, "${dataimporter.request.baseurl}");
     dataSource.init(context, initProps);
-    assertEquals(url, dataSource.getBaseUrl());
+    Assert.assertEquals(url, dataSource.getBaseUrl());
   }
 }

@@ -55,41 +55,42 @@ public class TestBoolean2 extends LuceneTestCase {
 
   @BeforeClass
   public static void beforeClass() throws Exception {
-    directory = newDirectory();
+    Random random = newStaticRandom(TestBoolean2.class);
+    directory = newDirectory(random);
     RandomIndexWriter writer= new RandomIndexWriter(random, directory);
     for (int i = 0; i < docFields.length; i++) {
       Document doc = new Document();
-      doc.add(newField(field, docFields[i], Field.Store.NO, Field.Index.ANALYZED));
+      doc.add(newField(random, field, docFields[i], Field.Store.NO, Field.Index.ANALYZED));
       writer.addDocument(doc);
     }
     writer.close();
     searcher = new IndexSearcher(directory, true);
 
     // Make big index
-    dir2 = new MockDirectoryWrapper(random, new RAMDirectory(directory));
+    dir2 = new MockDirectoryWrapper(new RAMDirectory(directory));
 
     // First multiply small test index:
     mulFactor = 1;
     int docCount = 0;
     do {
-      final Directory copy = new MockDirectoryWrapper(random, new RAMDirectory(dir2));
+      final Directory copy = new MockDirectoryWrapper(new RAMDirectory(dir2));
       RandomIndexWriter w = new RandomIndexWriter(random, dir2);
-      w.addIndexes(copy);
+      w.addIndexes(new Directory[] {copy});
       docCount = w.maxDoc();
       w.close();
       mulFactor *= 2;
     } while(docCount < 3000);
 
     RandomIndexWriter w = new RandomIndexWriter(random, dir2, 
-        newIndexWriterConfig(TEST_VERSION_CURRENT, new MockAnalyzer())
+        newIndexWriterConfig(random, TEST_VERSION_CURRENT, new MockAnalyzer())
         .setMaxBufferedDocs(_TestUtil.nextInt(random, 50, 1000)));
     Document doc = new Document();
-    doc.add(newField("field2", "xxx", Field.Store.NO, Field.Index.ANALYZED));
+    doc.add(newField(random, "field2", "xxx", Field.Store.NO, Field.Index.ANALYZED));
     for(int i=0;i<NUM_EXTRA_DOCS/2;i++) {
       w.addDocument(doc);
     }
     doc = new Document();
-    doc.add(newField("field2", "big bad bug", Field.Store.NO, Field.Index.ANALYZED));
+    doc.add(newField(random, "field2", "big bad bug", Field.Store.NO, Field.Index.ANALYZED));
     for(int i=0;i<NUM_EXTRA_DOCS/2;i++) {
       w.addDocument(doc);
     }
@@ -128,19 +129,20 @@ public class TestBoolean2 extends LuceneTestCase {
 //System.out.println();
 //System.out.println("Query: " + queryText);
 
-    Query query = makeQuery(queryText);
+    Query query1 = makeQuery(queryText);
     TopScoreDocCollector collector = TopScoreDocCollector.create(1000, false);
-    searcher.search(query, null, collector);
+    searcher.search(query1, null, collector);
     ScoreDoc[] hits1 = collector.topDocs().scoreDocs;
-
+    
+    Query query2 = makeQuery(queryText); // there should be no need to parse again...
     collector = TopScoreDocCollector.create(1000, true);
-    searcher.search(query, null, collector);
+    searcher.search(query2, null, collector);
     ScoreDoc[] hits2 = collector.topDocs().scoreDocs; 
 
     assertEquals(mulFactor * collector.totalHits,
-                 bigSearcher.search(query, 1).totalHits);
+                 bigSearcher.search(query1, 1).totalHits);
       
-    CheckHits.checkHitsQuery(query, hits1, hits2, expDocNrs);
+    CheckHits.checkHitsQuery(query2, hits1, hits2, expDocNrs);
   }
 
   @Test
@@ -243,7 +245,7 @@ public class TestBoolean2 extends LuceneTestCase {
         // match up.
         Sort sort = Sort.INDEXORDER;
 
-        QueryUtils.check(random, q1,searcher);
+        QueryUtils.check(q1,searcher);
 
         TopFieldCollector collector = TopFieldCollector.create(sort, 1000,
             false, true, true, true);

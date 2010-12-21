@@ -481,7 +481,7 @@ class ExtendedDismaxQParser extends QParser {
 
   @Override
   public Query getHighlightQuery() throws ParseException {
-    return parsedUserQuery == null ? altUserQuery : parsedUserQuery;
+    return parsedUserQuery;
   }
 
   public void addDebugInfo(NamedList<Object> debugInfo) {
@@ -866,7 +866,6 @@ class ExtendedDismaxQParser extends QParser {
     String val;
     String val2;
     boolean bool;
-    boolean bool2;
     float flt;
     int slop;
 
@@ -905,15 +904,14 @@ class ExtendedDismaxQParser extends QParser {
     }
 
     @Override
-     protected Query getRangeQuery(String field, String a, String b, boolean startInclusive, boolean endInclusive) throws ParseException {
+    protected Query getRangeQuery(String field, String a, String b, boolean inclusive) throws ParseException {
 //System.out.println("getRangeQuery:");
 
       this.type = QType.RANGE;
       this.field = field;
       this.val = a;
       this.val2 = b;
-      this.bool = startInclusive;
-      this.bool2 = endInclusive;
+      this.bool = inclusive;
       return getAliasedQuery();
     }
 
@@ -1024,7 +1022,7 @@ class ExtendedDismaxQParser extends QParser {
           case PREFIX: return super.getPrefixQuery(field, val);
           case WILDCARD: return super.getWildcardQuery(field, val);
           case FUZZY: return super.getFuzzyQuery(field, val, flt);
-          case RANGE: return super.getRangeQuery(field, val, val2, bool, bool2);
+          case RANGE: return super.getRangeQuery(field, val, val2, bool);
         }
         return null;
 

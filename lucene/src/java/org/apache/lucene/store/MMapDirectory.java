@@ -64,7 +64,7 @@ import org.apache.lucene.util.Constants;
  * an important limitation to be aware of.
  *
  * <p>This class supplies the workaround mentioned in the bug report
- * (see {@link #setUseUnmap}), which may fail on
+ * (disabled by default, see {@link #setUseUnmap}), which may fail on
  * non-Sun JVMs. It forcefully unmaps the buffer on close by using
  * an undocumented internal cleanup functionality.
  * {@link #UNMAP_SUPPORTED} is <code>true</code>, if the workaround
@@ -78,9 +78,8 @@ import org.apache.lucene.util.Constants;
  * </p>
  */
 public class MMapDirectory extends FSDirectory {
-  private boolean useUnmapHack = UNMAP_SUPPORTED;
-  public static final int DEFAULT_MAX_BUFF = Constants.JRE_IS_64BIT ? Integer.MAX_VALUE : (256 * 1024 * 1024);
-  private int maxBBuf = DEFAULT_MAX_BUFF;
+  private boolean useUnmapHack = false;
+  private int maxBBuf = Constants.JRE_IS_64BIT ? Integer.MAX_VALUE : (256 * 1024 * 1024);
 
   /** Create a new MMapDirectory for the named location.
    *
@@ -260,8 +259,6 @@ public class MMapDirectory extends FSDirectory {
 
     @Override
     public Object clone() {
-      if (buffer == null)
-        throw new AlreadyClosedException("MMapIndexInput already closed");
       MMapIndexInput clone = (MMapIndexInput)super.clone();
       clone.isClone = true;
       clone.buffer = buffer.duplicate();
@@ -270,9 +267,9 @@ public class MMapDirectory extends FSDirectory {
 
     @Override
     public void close() throws IOException {
+      if (isClone || buffer == null) return;
       // unmap the buffer (if enabled) and at least unset it for GC
       try {
-        if (isClone || buffer == null) return;
         cleanMapping(buffer);
       } finally {
         buffer = null;
@@ -385,8 +382,6 @@ public class MMapDirectory extends FSDirectory {
   
     @Override
     public Object clone() {
-      if (buffers == null)
-        throw new AlreadyClosedException("MultiMMapIndexInput already closed");
       MultiMMapIndexInput clone = (MultiMMapIndexInput)super.clone();
       clone.isClone = true;
       clone.buffers = new ByteBuffer[buffers.length];
@@ -408,8 +403,8 @@ public class MMapDirectory extends FSDirectory {
   
     @Override
     public void close() throws IOException {
+      if (isClone || buffers == null) return;
       try {
-        if (isClone || buffers == null) return;
         for (int bufNr = 0; bufNr < buffers.length; bufNr++) {
           // unmap the buffer (if enabled) and at least unset it for GC
           try {

@@ -149,6 +149,18 @@ public class ChainedFilter extends Filter
         return result;
     }
 
+    /** Provide a SortedVIntList when it is definitely
+     *  smaller than an OpenBitSet
+     *  @deprecated Either use CachingWrapperFilter, or
+     *  switch to a different DocIdSet implementation yourself.
+     *  This method will be removed in Lucene 4.0 
+     **/
+    @Deprecated
+    protected final DocIdSet finalResult(OpenBitSetDISI result, int maxDocs) {
+        return result;
+    }
+        
+
     /**
      * Delegates to each filter in the chain.
      * @param reader IndexReader
@@ -163,7 +175,7 @@ public class ChainedFilter extends Filter
         {
             doChain(result, logic, chain[index[0]].getDocIdSet(reader));
         }
-        return result;
+        return finalResult(result, reader.maxDoc());
     }
 
     /**
@@ -183,7 +195,7 @@ public class ChainedFilter extends Filter
         {
             doChain(result, logic[index[0]], chain[index[0]].getDocIdSet(reader));
         }
-        return result;
+        return finalResult(result, reader.maxDoc());
     }
 
     @Override

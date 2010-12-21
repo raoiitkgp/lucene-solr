@@ -44,11 +44,11 @@ import com.ibm.icu.util.ULocale;
  */
 public class DefaultICUTokenizerConfig extends ICUTokenizerConfig {
   /** Token type for words containing ideographic characters */
-  public static final String WORD_IDEO = "<IDEOGRAPHIC>";
+  public static final String WORD_IDEO = "<IDEO>";
   /** Token type for words containing Japanese kana */
   public static final String WORD_KANA = "<KANA>";
   /** Token type for words that contain letters */
-  public static final String WORD_LETTER = "<ALPHANUM>";
+  public static final String WORD_LETTER = "<WORD>";
   /** Token type for words that appear to be numbers */
   public static final String WORD_NUMBER = "<NUM>";
   

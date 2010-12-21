@@ -20,6 +20,7 @@ package org.apache.lucene.index;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -29,7 +30,6 @@ import org.apache.lucene.index.codecs.PostingsConsumer;
 import org.apache.lucene.index.codecs.FieldsConsumer;
 import org.apache.lucene.index.codecs.TermsConsumer;
 import org.apache.lucene.util.BytesRef;
-import org.apache.lucene.util.CollectionUtil;
 
 final class FreqProxTermsWriter extends TermsHashConsumer {
 
@@ -67,7 +67,7 @@ final class FreqProxTermsWriter extends TermsHashConsumer {
 
       for (final TermsHashConsumerPerField i : fields) {
         final FreqProxTermsWriterPerField perField = (FreqProxTermsWriterPerField) i;
-        if (perField.termsHashPerField.bytesHash.size() > 0)
+        if (perField.termsHashPerField.numPostings > 0)
           allFields.add(perField);
       }
     }
@@ -75,9 +75,10 @@ final class FreqProxTermsWriter extends TermsHashConsumer {
     final int numAllFields = allFields.size();
 
     // Sort by field name
-    CollectionUtil.quickSort(allFields);
+    Collections.sort(allFields);
 
-    final FieldsConsumer consumer = state.segmentCodecs.codec().fieldsConsumer(state);
+    // TODO: allow Lucene user to customize this codec:
+    final FieldsConsumer consumer = state.codec.fieldsConsumer(state);
 
     /*
     Current writer chain:
@@ -115,7 +116,7 @@ final class FreqProxTermsWriter extends TermsHashConsumer {
 
       for(int i=0;i<fields.length;i++) {
         TermsHashPerField perField = fields[i].termsHashPerField;
-        int numPostings = perField.bytesHash.size();
+        int numPostings = perField.numPostings;
         perField.reset();
         perField.shrinkHash(numPostings);
         fields[i].reset();

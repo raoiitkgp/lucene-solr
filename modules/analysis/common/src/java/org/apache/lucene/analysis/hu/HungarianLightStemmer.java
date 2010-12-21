@@ -202,7 +202,6 @@ public class HungarianLightStemmer {
     return len;
   }
 
-  @SuppressWarnings("fallthrough")
   private int removePlural(char s[], int len) {
     if (len > 3 && s[len-1] == 'k')
       switch(s[len-2]) {

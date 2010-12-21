@@ -26,7 +26,7 @@ import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Searcher;
-import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.FSDirectory;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.types.FileSet;
 import org.apache.lucene.util.LuceneTestCase;
@@ -41,7 +41,7 @@ public class IndexTaskTest extends LuceneTestCase {
 
     private Searcher searcher;
     private Analyzer analyzer;
-    private Directory dir;
+    private FSDirectory dir;
 
 
     /**
@@ -68,7 +68,7 @@ public class IndexTaskTest extends LuceneTestCase {
         task.setProject(project);
         task.execute();
 
-        dir = newFSDirectory(indexDir);
+        dir = FSDirectory.open(indexDir);
         searcher = new IndexSearcher(dir, true);
         analyzer = new StopAnalyzer(TEST_VERSION_CURRENT);
     }

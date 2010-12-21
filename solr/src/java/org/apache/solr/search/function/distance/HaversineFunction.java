@@ -113,7 +113,7 @@ public class HaversineFunction extends ValueSource {
       }
 
       public double doubleVal(int doc) {
-        return distance(doc, vals1, vals2);
+        return (double) distance(doc, vals1, vals2);
       }
 
       public String strVal(int doc) {

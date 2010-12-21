@@ -115,6 +115,7 @@ public abstract class BaseResponseWriter {
             }
             responseWriter.writeDoc(sdoc);
           }
+          responseWriter.end();
         } else {
           ArrayList<SolrDocument> list = new ArrayList<SolrDocument>(docList
               .size());
@@ -166,7 +167,7 @@ public abstract class BaseResponseWriter {
   private static SolrDocument getDoc(int id, IdxInfo info) throws IOException {
     Document doc = info.searcher.doc(id);
     SolrDocument solrDoc = new SolrDocument();
-    for (Fieldable f : doc.getFields()) {
+    for (Fieldable f : (List<Fieldable>) doc.getFields()) {
       String fieldName = f.name();
       if (info.returnFields != null && !info.returnFields.contains(fieldName))
         continue;

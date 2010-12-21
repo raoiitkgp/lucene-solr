@@ -22,7 +22,6 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.search.*;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.RAMDirectory;
@@ -36,7 +35,7 @@ public class TestSort extends AbstractSolrTestCase {
   public String getSchemaFile() { return null; }
   public String getSolrConfigFile() { return null; }
 
-  Random r = random;
+  Random r = new Random();
 
   int ndocs = 77;
   int iter = 50;
@@ -60,12 +59,7 @@ public class TestSort extends AbstractSolrTestCase {
     Field f2 = new Field("f2","0", Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS);
 
     for (int iterCnt = 0; iterCnt<iter; iterCnt++) {
-      IndexWriter iw = new IndexWriter(
-          dir,
-          new IndexWriterConfig(TEST_VERSION_CURRENT, new SimpleAnalyzer(TEST_VERSION_CURRENT)).
-              setOpenMode(IndexWriterConfig.OpenMode.CREATE).
-              setMaxFieldLength(IndexWriterConfig.UNLIMITED_FIELD_LENGTH)
-      );
+      IndexWriter iw = new IndexWriter(dir, new SimpleAnalyzer(), true, IndexWriter.MaxFieldLength.UNLIMITED);
       final MyDoc[] mydocs = new MyDoc[ndocs];
 
       int v1EmptyPercent = 50;

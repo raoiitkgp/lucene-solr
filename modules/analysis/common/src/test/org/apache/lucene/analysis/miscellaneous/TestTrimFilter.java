@@ -23,7 +23,12 @@ import java.util.Collection;
 import org.apache.lucene.analysis.BaseTokenStreamTestCase;
 import org.apache.lucene.analysis.Token;
 import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.tokenattributes.*;
+import org.apache.lucene.analysis.tokenattributes.FlagsAttribute;
+import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
+import org.apache.lucene.analysis.tokenattributes.PayloadAttribute;
+import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
+import org.apache.lucene.analysis.tokenattributes.TypeAttribute;
 
 /**
  * @version $Id:$
@@ -65,9 +70,8 @@ public class TestTrimFilter extends BaseTokenStreamTestCase {
   }
   
   /**
-   * @deprecated (3.0) does not support custom attributes
+   * @deprecated does not support custom attributes
    */
-  @Deprecated
   private static class IterTokenStream extends TokenStream {
     final Token tokens[];
     int index = 0;

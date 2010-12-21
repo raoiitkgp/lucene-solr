@@ -56,22 +56,22 @@ public class QueryParser implements QueryParserConstants {
   }
 
   protected SrndQuery getFieldsQuery(
-      SrndQuery q, ArrayList<String> fieldNames) {
+      SrndQuery q, ArrayList fieldNames) {
     /* FIXME: check acceptable subquery: at least one subquery should not be
      * a fields query.
      */
     return new FieldsQuery(q, fieldNames, fieldOperator);
   }
 
-  protected SrndQuery getOrQuery(List<SrndQuery> queries, boolean infix, Token orToken) {
+  protected SrndQuery getOrQuery(List queries, boolean infix, Token orToken) {
     return new OrQuery(queries, infix, orToken.image);
   }
 
-  protected SrndQuery getAndQuery(List<SrndQuery> queries, boolean infix, Token andToken) {
+  protected SrndQuery getAndQuery(List queries, boolean infix, Token andToken) {
     return new AndQuery( queries, infix, andToken.image);
   }
 
-  protected SrndQuery getNotQuery(List<SrndQuery> queries, Token notToken) {
+  protected SrndQuery getNotQuery(List queries, Token notToken) {
     return new NotQuery( queries, notToken.image);
   }
 
@@ -91,7 +91,7 @@ public class QueryParser implements QueryParserConstants {
   }
 
   protected SrndQuery getDistanceQuery(
-        List<SrndQuery> queries,
+        List queries,
         boolean infix,
         Token dToken,
         boolean ordered) throws ParseException {
@@ -144,16 +144,16 @@ public class QueryParser implements QueryParserConstants {
 
   final public SrndQuery FieldsQuery() throws ParseException {
   SrndQuery q;
-  ArrayList<String> fieldNames;
+  ArrayList fieldNames;
     fieldNames = OptionalFields();
     q = OrQuery();
    {if (true) return (fieldNames == null) ? q : getFieldsQuery(q, fieldNames);}
     throw new Error("Missing return statement in function");
   }
 
-  final public ArrayList<String> OptionalFields() throws ParseException {
+  final public ArrayList OptionalFields() throws ParseException {
   Token fieldName;
-  ArrayList<String> fieldNames = null;
+  ArrayList fieldNames = null;
     label_1:
     while (true) {
       if (jj_2_1(2)) {
@@ -165,7 +165,7 @@ public class QueryParser implements QueryParserConstants {
           fieldName = jj_consume_token(TERM);
       jj_consume_token(COLON);
       if (fieldNames == null) {
-        fieldNames = new ArrayList<String>();
+        fieldNames = new ArrayList();
       }
       fieldNames.add(fieldName.image);
     }
@@ -175,7 +175,7 @@ public class QueryParser implements QueryParserConstants {
 
   final public SrndQuery OrQuery() throws ParseException {
   SrndQuery q;
-  ArrayList<SrndQuery> queries = null;
+  ArrayList queries = null;
   Token oprt = null;
     q = AndQuery();
     label_2:
@@ -191,7 +191,7 @@ public class QueryParser implements QueryParserConstants {
       oprt = jj_consume_token(OR);
                   /* keep only last used operator */
       if (queries == null) {
-        queries = new ArrayList<SrndQuery>();
+        queries = new ArrayList();
         queries.add(q);
       }
       q = AndQuery();
@@ -203,7 +203,7 @@ public class QueryParser implements QueryParserConstants {
 
   final public SrndQuery AndQuery() throws ParseException {
   SrndQuery q;
-  ArrayList<SrndQuery> queries = null;
+  ArrayList queries = null;
   Token oprt = null;
     q = NotQuery();
     label_3:
@@ -219,7 +219,7 @@ public class QueryParser implements QueryParserConstants {
       oprt = jj_consume_token(AND);
                    /* keep only last used operator */
       if (queries == null) {
-        queries = new ArrayList<SrndQuery>();
+        queries = new ArrayList();
         queries.add(q);
       }
       q = NotQuery();
@@ -231,7 +231,7 @@ public class QueryParser implements QueryParserConstants {
 
   final public SrndQuery NotQuery() throws ParseException {
   SrndQuery q;
-  ArrayList<SrndQuery> queries = null;
+  ArrayList queries = null;
   Token oprt = null;
     q = NQuery();
     label_4:
@@ -247,7 +247,7 @@ public class QueryParser implements QueryParserConstants {
       oprt = jj_consume_token(NOT);
                     /* keep only last used operator */
       if (queries == null) {
-        queries = new ArrayList<SrndQuery>();
+        queries = new ArrayList();
         queries.add(q);
       }
       q = NQuery();
@@ -259,7 +259,7 @@ public class QueryParser implements QueryParserConstants {
 
   final public SrndQuery NQuery() throws ParseException {
   SrndQuery q;
-  ArrayList<SrndQuery> queries;
+  ArrayList queries;
   Token dt;
     q = WQuery();
     label_5:
@@ -273,7 +273,7 @@ public class QueryParser implements QueryParserConstants {
         break label_5;
       }
       dt = jj_consume_token(N);
-      queries = new ArrayList<SrndQuery>();
+      queries = new ArrayList();
       queries.add(q); /* left associative */
 
       q = WQuery();
@@ -286,7 +286,7 @@ public class QueryParser implements QueryParserConstants {
 
   final public SrndQuery WQuery() throws ParseException {
   SrndQuery q;
-  ArrayList<SrndQuery> queries;
+  ArrayList queries;
   Token wt;
     q = PrimaryQuery();
     label_6:
@@ -300,7 +300,7 @@ public class QueryParser implements QueryParserConstants {
         break label_6;
       }
       wt = jj_consume_token(W);
-      queries = new ArrayList<SrndQuery>();
+      queries = new ArrayList();
       queries.add(q); /* left associative */
 
       q = PrimaryQuery();
@@ -345,7 +345,7 @@ public class QueryParser implements QueryParserConstants {
 
   final public SrndQuery PrefixOperatorQuery() throws ParseException {
   Token oprt;
-  List<SrndQuery> queries;
+  List queries;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case OR:
       oprt = jj_consume_token(OR);
@@ -379,9 +379,9 @@ public class QueryParser implements QueryParserConstants {
     throw new Error("Missing return statement in function");
   }
 
-  final public List<SrndQuery> FieldsQueryList() throws ParseException {
+  final public List FieldsQueryList() throws ParseException {
   SrndQuery q;
-  ArrayList<SrndQuery> queries = new ArrayList<SrndQuery>();
+  ArrayList queries = new ArrayList();
     jj_consume_token(LPAREN);
     q = FieldsQuery();
                      queries.add(q);

@@ -83,9 +83,18 @@ public class TestSnapshotDeletionPolicy extends LuceneTestCase {
   
   @Test
   public void testSnapshotDeletionPolicy() throws Exception {
-    Directory fsDir = newDirectory();
-    runTest(random, fsDir);
-    fsDir.close();
+    File dir = _TestUtil.getTempDir(INDEX_PATH);
+    try {
+      Directory fsDir = FSDirectory.open(dir);
+      runTest(random, fsDir);
+      fsDir.close();
+    } finally {
+      _TestUtil.rmDir(dir);
+    }
+
+    Directory dir2 = newDirectory();
+    runTest(random, dir2);
+    dir2.close();
   }
 
   private void runTest(Random random, Directory dir) throws Exception {

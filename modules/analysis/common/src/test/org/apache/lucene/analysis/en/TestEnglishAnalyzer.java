@@ -39,8 +39,6 @@ public class TestEnglishAnalyzer extends BaseTokenStreamTestCase {
     checkOneTermReuse(a, "book", "book");
     // stopword
     assertAnalyzesTo(a, "the", new String[] {});
-    // possessive removal
-    checkOneTermReuse(a, "steven's", "steven");
   }
   
   /** test use of exclusion set */

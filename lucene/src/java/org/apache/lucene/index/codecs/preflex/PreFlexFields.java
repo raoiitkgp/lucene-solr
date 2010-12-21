@@ -44,10 +44,7 @@ import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.UnicodeUtil;
 
 /** Exposes flex API on a pre-flex index, as a codec. 
- * @lucene.experimental
- * @deprecated (4.0)
- */
-@Deprecated
+ * @lucene.experimental */
 public class PreFlexFields extends FieldsProducer {
   
   private static final boolean DEBUG_SURROGATES = false;
@@ -77,51 +74,39 @@ public class PreFlexFields extends FieldsProducer {
     if (indexDivisor < 0) {
       indexDivisor = -indexDivisor;
     }
-    
-    boolean success = false;
-    try {
-      TermInfosReader r = new TermInfosReader(dir, info.name, fieldInfos, readBufferSize, indexDivisor);    
-      if (indexDivisor == -1) {
-        tisNoIndex = r;
-      } else {
-        tisNoIndex = null;
-        tis = r;
-      }
-      this.readBufferSize = readBufferSize;
-      this.fieldInfos = fieldInfos;
 
-      // make sure that all index files have been read or are kept open
-      // so that if an index update removes them we'll still have them
-      freqStream = dir.openInput(info.name + ".frq", readBufferSize);
-      boolean anyProx = false;
-      final int numFields = fieldInfos.size();
-      for(int i=0;i<numFields;i++) {
-        final FieldInfo fieldInfo = fieldInfos.fieldInfo(i);
-        if (fieldInfo.isIndexed) {
-          fields.put(fieldInfo.name, fieldInfo);
-          preTerms.put(fieldInfo.name, new PreTerms(fieldInfo));
-          if (!fieldInfo.omitTermFreqAndPositions) {
-            anyProx = true;
-          }
+    TermInfosReader r = new TermInfosReader(dir, info.name, fieldInfos, readBufferSize, indexDivisor);    
+    if (indexDivisor == -1) {
+      tisNoIndex = r;
+    } else {
+      tisNoIndex = null;
+      tis = r;
+    }
+    this.readBufferSize = readBufferSize;
+    this.fieldInfos = fieldInfos;
+
+    // make sure that all index files have been read or are kept open
+    // so that if an index update removes them we'll still have them
+    freqStream = dir.openInput(info.name + ".frq", readBufferSize);
+    boolean anyProx = false;
+    final int numFields = fieldInfos.size();
+    for(int i=0;i<numFields;i++) {
+      final FieldInfo fieldInfo = fieldInfos.fieldInfo(i);
+      if (fieldInfo.isIndexed) {
+        fields.put(fieldInfo.name, fieldInfo);
+        preTerms.put(fieldInfo.name, new PreTerms(fieldInfo));
+        if (!fieldInfo.omitTermFreqAndPositions) {
+          anyProx = true;
         }
       }
-
-      if (anyProx) {
-        proxStream = dir.openInput(info.name + ".prx", readBufferSize);
-      } else {
-        proxStream = null;
-      }
-      success = true;
-    } finally {
-      // With lock-less commits, it's entirely possible (and
-      // fine) to hit a FileNotFound exception above. In
-      // this case, we want to explicitly close any subset
-      // of things that were opened so that we don't have to
-      // wait for a GC to do so.
-      if (!success) {
-        close();
-      }
     }
+
+    if (anyProx) {
+      proxStream = dir.openInput(info.name + ".prx", readBufferSize);
+    } else {
+      proxStream = null;
+    }
+
     this.dir = dir;
   }
 
@@ -331,7 +316,7 @@ public class PreFlexFields extends FieldsProducer {
       }
 
       // Seek "back":
-      getTermsDict().seekEnum(te, protoTerm.createTerm(term), true);
+      getTermsDict().seekEnum(te, protoTerm.createTerm(term));
 
       // Test if the term we seek'd to in fact found a
       // surrogate pair at the same position as the E:
@@ -402,7 +387,7 @@ public class PreFlexFields extends FieldsProducer {
 
           if (seekToNonBMP(seekTermEnum, prevTerm, downTo)) {
             // TODO: more efficient seek?
-            getTermsDict().seekEnum(termEnum, seekTermEnum.term(), true);
+            getTermsDict().seekEnum(termEnum, seekTermEnum.term());
             //newSuffixStart = downTo+4;
             newSuffixStart = downTo;
             scratchTerm.copy(termEnum.term().bytes());
@@ -458,7 +443,7 @@ public class PreFlexFields extends FieldsProducer {
           
         // TODO: more efficient seek?  can we simply swap
         // the enums?
-        getTermsDict().seekEnum(termEnum, protoTerm.createTerm(scratchTerm), true);
+        getTermsDict().seekEnum(termEnum, protoTerm.createTerm(scratchTerm));
 
         final Term t2 = termEnum.term();
 
@@ -634,7 +619,7 @@ public class PreFlexFields extends FieldsProducer {
 
           // Seek "forward":
           // TODO: more efficient seek?
-          getTermsDict().seekEnum(seekTermEnum, protoTerm.createTerm(scratchTerm), true);
+          getTermsDict().seekEnum(seekTermEnum, protoTerm.createTerm(scratchTerm));
 
           scratchTerm.bytes[upTo] = scratch[0];
           scratchTerm.bytes[upTo+1] = scratch[1];
@@ -683,7 +668,7 @@ public class PreFlexFields extends FieldsProducer {
 
             // OK seek "back"
             // TODO: more efficient seek?
-            getTermsDict().seekEnum(termEnum, seekTermEnum.term(), true);
+            getTermsDict().seekEnum(termEnum, seekTermEnum.term());
 
             scratchTerm.copy(seekTermEnum.term().bytes());
 
@@ -716,7 +701,7 @@ public class PreFlexFields extends FieldsProducer {
         seekTermEnum = getTermsDict().terms(protoTerm);
         //System.out.println("  term=" + termEnum.term());
       } else {
-        getTermsDict().seekEnum(termEnum, protoTerm, true);
+        getTermsDict().seekEnum(termEnum, protoTerm);
       }
       skipNext = true;
 
@@ -742,11 +727,6 @@ public class PreFlexFields extends FieldsProducer {
     }
 
     @Override
-    public void cacheCurrentTerm() throws IOException {
-      getTermsDict().cacheCurrentTerm(termEnum);
-    }
-
-    @Override
     public SeekStatus seek(long ord) throws IOException {
       throw new UnsupportedOperationException();
     }
@@ -767,7 +747,7 @@ public class PreFlexFields extends FieldsProducer {
 
       assert termEnum != null;
 
-      tis.seekEnum(termEnum, t0, useCache);
+      tis.seekEnum(termEnum, t0);
 
       final Term t = termEnum.term();
 
@@ -803,7 +783,7 @@ public class PreFlexFields extends FieldsProducer {
             if (seekToNonBMP(seekTermEnum, scratchTerm, i)) {
 
               scratchTerm.copy(seekTermEnum.term().bytes());
-              getTermsDict().seekEnum(termEnum, seekTermEnum.term(), useCache);
+              getTermsDict().seekEnum(termEnum, seekTermEnum.term());
 
               newSuffixStart = 1+i;
 

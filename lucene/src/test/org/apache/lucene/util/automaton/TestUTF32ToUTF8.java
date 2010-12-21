@@ -204,7 +204,7 @@ public class TestUTF32ToUTF8 extends LuceneTestCase {
   public void testRandomRegexes() throws Exception {
     int num = 250 * RANDOM_MULTIPLIER;
     for (int i = 0; i < num; i++) {
-      assertAutomaton(new RegExp(AutomatonTestUtil.randomRegexp(random), RegExp.NONE).toAutomaton());
+      assertAutomaton(AutomatonTestUtil.randomRegexp(random).toAutomaton());
     }
   }
   

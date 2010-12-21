@@ -20,7 +20,6 @@ package org.apache.solr.request;
 /**
  * @deprecated use org.apache.solr.response.QueryResponseWriter
  */
-@Deprecated
 public interface QueryResponseWriter extends org.apache.solr.response.QueryResponseWriter 
 {
 	

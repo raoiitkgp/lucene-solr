@@ -38,7 +38,6 @@ import org.apache.solr.common.params.MultiMapSolrParams;
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.common.util.ContentStream;
 import org.apache.solr.core.SolrCore;
-import org.apache.solr.request.SolrQueryRequest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -74,15 +73,14 @@ public class SolrRequestParserTest extends SolrTestCaseJ4 {
     
     // Make sure it got a single stream in and out ok
     List<ContentStream> streams = new ArrayList<ContentStream>();
-    SolrQueryRequest req = parser.buildRequestFrom( core, new MultiMapSolrParams( args ), streams );
+    parser.buildRequestFrom( core, new MultiMapSolrParams( args ), streams );
     assertEquals( 1, streams.size() );
     assertEquals( body1, IOUtils.toString( streams.get(0).getStream() ) );
-    req.close();
-
+    
     // Now add three and make sure they come out ok
     streams = new ArrayList<ContentStream>();
     args.put( CommonParams.STREAM_BODY, new String[] {body1,body2,body3} );
-    req = parser.buildRequestFrom( core, new MultiMapSolrParams( args ), streams );
+    parser.buildRequestFrom( core, new MultiMapSolrParams( args ), streams );
     assertEquals( 3, streams.size() );
     ArrayList<String> input  = new ArrayList<String>();
     ArrayList<String> output = new ArrayList<String>();
@@ -96,17 +94,15 @@ public class SolrRequestParserTest extends SolrTestCaseJ4 {
     Collections.sort( input );
     Collections.sort( output );
     assertEquals( input.toString(), output.toString() );
-    req.close();
-
+    
     // set the contentType and make sure tat gets set
     String ctype = "text/xxx";
     streams = new ArrayList<ContentStream>();
     args.put( CommonParams.STREAM_CONTENTTYPE, new String[] {ctype} );
-    req = parser.buildRequestFrom( core, new MultiMapSolrParams( args ), streams );
+    parser.buildRequestFrom( core, new MultiMapSolrParams( args ), streams );
     for( ContentStream s : streams ) {
       assertEquals( ctype, s.getContentType() );
     }
-    req.close();
   }
   
   @Test
@@ -123,7 +119,8 @@ public class SolrRequestParserTest extends SolrTestCaseJ4 {
       txt = IOUtils.toString( connection.getInputStream());
     }
     catch( Exception ex ) {
-      assumeNoException("Unable to connect to " + url + " to run the test.", ex);
+      // TODO - should it fail/skip?
+      fail( "this test only works if you have a network connection." );
       return;
     }
 
@@ -134,10 +131,9 @@ public class SolrRequestParserTest extends SolrTestCaseJ4 {
     
     // Make sure it got a single stream in and out ok
     List<ContentStream> streams = new ArrayList<ContentStream>();
-    SolrQueryRequest req = parser.buildRequestFrom( core, new MultiMapSolrParams( args ), streams );
+    parser.buildRequestFrom( core, new MultiMapSolrParams( args ), streams );
     assertEquals( 1, streams.size() );
     assertEquals( txt, IOUtils.toString( streams.get(0).getStream() ) );
-    req.close();
   }
   
   @Test

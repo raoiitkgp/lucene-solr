@@ -25,7 +25,6 @@ import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.client.solrj.request.FieldAnalysisRequest;
 import org.apache.solr.request.LocalSolrQueryRequest;
-import org.apache.solr.request.SolrQueryRequest;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -67,8 +66,7 @@ public class FieldAnalysisRequestHandlerTest extends AnalysisRequestHandlerTestB
     params.add(AnalysisParams.FIELD_VALUE, "the quick red fox jumped over the lazy brown dogs");
     params.add(CommonParams.Q, "fox brown");
 
-    SolrQueryRequest req = new LocalSolrQueryRequest(h.getCore(), params);
-    FieldAnalysisRequest request = handler.resolveAnalysisRequest(req);
+    FieldAnalysisRequest request = handler.resolveAnalysisRequest(new LocalSolrQueryRequest(h.getCore(), params));
     List<String> fieldNames = request.getFieldNames();
     assertEquals("Expecting 2 field names", 2, fieldNames.size());
     assertEquals("text", fieldNames.get(0));
@@ -80,35 +78,25 @@ public class FieldAnalysisRequestHandlerTest extends AnalysisRequestHandlerTestB
     assertEquals("the quick red fox jumped over the lazy brown dogs", request.getFieldValue());
     assertEquals("fox brown", request.getQuery());
     assertFalse(request.isShowMatch());
-    req.close();
 
     // testing overide of query value using analysis.query param
     params.add(AnalysisParams.QUERY, "quick lazy");
-    req=new LocalSolrQueryRequest(h.getCore(), params);
-    request = handler.resolveAnalysisRequest(req);
+    request = handler.resolveAnalysisRequest(new LocalSolrQueryRequest(h.getCore(), params));
     assertEquals("quick lazy", request.getQuery());
-    req.close();
 
     // testing analysis.showmatch param
     params.add(AnalysisParams.SHOW_MATCH, "false");
-    req=new LocalSolrQueryRequest(h.getCore(), params);
-    request = handler.resolveAnalysisRequest(req);
+    request = handler.resolveAnalysisRequest(new LocalSolrQueryRequest(h.getCore(), params));
     assertFalse(request.isShowMatch());
-    req.close();
-
     params.set(AnalysisParams.SHOW_MATCH, "true");
-    req=new LocalSolrQueryRequest(h.getCore(), params);
-    request = handler.resolveAnalysisRequest(req);
+    request = handler.resolveAnalysisRequest(new LocalSolrQueryRequest(h.getCore(), params));
     assertTrue(request.isShowMatch());
-    req.close();
 
     // testing absence of query value
     params.remove(CommonParams.Q);
     params.remove(AnalysisParams.QUERY);
-    req=new LocalSolrQueryRequest(h.getCore(), params);
-    request = handler.resolveAnalysisRequest(req);
+    request = handler.resolveAnalysisRequest(new LocalSolrQueryRequest(h.getCore(), params));
     assertNull(request.getQuery());
-    req.close();
   }
 
   /**

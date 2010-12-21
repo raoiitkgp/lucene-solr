@@ -28,9 +28,7 @@ import org.apache.lucene.index.IndexReader;
  *
  * @lucene.internal
  */
-public final class ReaderUtil {
-
-  private ReaderUtil() {} // no instance
+public class ReaderUtil {
 
   public static class Slice {
     public static final Slice[] EMPTY_ARRAY = new Slice[0];

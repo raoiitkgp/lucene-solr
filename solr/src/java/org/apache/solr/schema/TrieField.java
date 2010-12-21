@@ -19,11 +19,6 @@ package org.apache.solr.schema;
 import org.apache.lucene.document.Fieldable;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.search.*;
-import org.apache.lucene.search.cache.CachedArrayCreator;
-import org.apache.lucene.search.cache.DoubleValuesCreator;
-import org.apache.lucene.search.cache.FloatValuesCreator;
-import org.apache.lucene.search.cache.IntValuesCreator;
-import org.apache.lucene.search.cache.LongValuesCreator;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.NumericUtils;
 import org.apache.lucene.analysis.TokenStream;
@@ -67,7 +62,6 @@ public class TrieField extends FieldType {
   protected int precisionStepArg = TrieField.DEFAULT_PRECISION_STEP;  // the one passed in or defaulted
   protected int precisionStep;     // normalized
   protected TrieTypes type;
-  protected Object missingValue;
 
   /**
    * Used for handling date types following the same semantics as DateField
@@ -123,71 +117,33 @@ public class TrieField extends FieldType {
   }
 
   public SortField getSortField(SchemaField field, boolean top) {
-    int flags = CachedArrayCreator.CACHE_VALUES_AND_BITS;
-    Object missingValue = null;
-    boolean sortMissingLast  = on( SORT_MISSING_LAST,  properties );
-    boolean sortMissingFirst = on( SORT_MISSING_FIRST, properties );
-    
     switch (type) {
       case INTEGER:
-        if( sortMissingLast ) {
-          missingValue = top ? Integer.MIN_VALUE : Integer.MAX_VALUE;
-        }
-        else if( sortMissingFirst ) {
-          missingValue = top ? Integer.MAX_VALUE : Integer.MIN_VALUE;
-        }
-        return new SortField( new IntValuesCreator( field.getName(), 
-            FieldCache.NUMERIC_UTILS_INT_PARSER, flags ), top).setMissingValue( missingValue );
-      
+        return new SortField(field.getName(), FieldCache.NUMERIC_UTILS_INT_PARSER, top);
       case FLOAT:
-        if( sortMissingLast ) {
-          missingValue = top ? Float.NEGATIVE_INFINITY : Float.POSITIVE_INFINITY;
-        }
-        else if( sortMissingFirst ) {
-          missingValue = top ? Float.POSITIVE_INFINITY : Float.NEGATIVE_INFINITY;
-        }
-        return new SortField( new FloatValuesCreator( field.getName(), 
-            FieldCache.NUMERIC_UTILS_FLOAT_PARSER, flags ), top).setMissingValue( missingValue );
-      
+        return new SortField(field.getName(), FieldCache.NUMERIC_UTILS_FLOAT_PARSER, top);
       case DATE: // fallthrough
       case LONG:
-        if( sortMissingLast ) {
-          missingValue = top ? Long.MIN_VALUE : Long.MAX_VALUE;
-        }
-        else if( sortMissingFirst ) {
-          missingValue = top ? Long.MAX_VALUE : Long.MIN_VALUE;
-        }
-        return new SortField( new LongValuesCreator( field.getName(), 
-            FieldCache.NUMERIC_UTILS_LONG_PARSER, flags ), top).setMissingValue( missingValue );
-        
+        return new SortField(field.getName(), FieldCache.NUMERIC_UTILS_LONG_PARSER, top);
       case DOUBLE:
-        if( sortMissingLast ) {
-          missingValue = top ? Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY;
-        }
-        else if( sortMissingFirst ) {
-          missingValue = top ? Double.POSITIVE_INFINITY : Double.NEGATIVE_INFINITY;
-        }
-        return new SortField( new DoubleValuesCreator( field.getName(), 
-            FieldCache.NUMERIC_UTILS_DOUBLE_PARSER, flags ), top).setMissingValue( missingValue );
-        
+        return new SortField(field.getName(), FieldCache.NUMERIC_UTILS_DOUBLE_PARSER, top);
       default:
         throw new SolrException(SolrException.ErrorCode.SERVER_ERROR, "Unknown type for trie field: " + field.name);
     }
   }
 
   public ValueSource getValueSource(SchemaField field) {
-    int flags = CachedArrayCreator.CACHE_VALUES_AND_BITS;
     switch (type) {
       case INTEGER:
-        return new IntFieldSource( new IntValuesCreator( field.getName(), FieldCache.NUMERIC_UTILS_INT_PARSER, flags ) );
+        return new IntFieldSource(field.getName(), FieldCache.NUMERIC_UTILS_INT_PARSER);
       case FLOAT:
-        return new FloatFieldSource( new FloatValuesCreator( field.getName(), FieldCache.NUMERIC_UTILS_FLOAT_PARSER, flags ));
+        return new FloatFieldSource(field.getName(), FieldCache.NUMERIC_UTILS_FLOAT_PARSER);
       case DATE:
-        return new TrieDateFieldSource( new LongValuesCreator( field.getName(), FieldCache.NUMERIC_UTILS_LONG_PARSER, flags ));        
+        return new TrieDateFieldSource(field.getName(), FieldCache.NUMERIC_UTILS_LONG_PARSER);        
       case LONG:
-        return new LongFieldSource( new LongValuesCreator( field.getName(), FieldCache.NUMERIC_UTILS_LONG_PARSER, flags ) );
+        return new LongFieldSource(field.getName(), FieldCache.NUMERIC_UTILS_LONG_PARSER);
       case DOUBLE:
-        return new DoubleFieldSource( new DoubleValuesCreator( field.getName(), FieldCache.NUMERIC_UTILS_DOUBLE_PARSER, flags ));
+        return new DoubleFieldSource(field.getName(), FieldCache.NUMERIC_UTILS_DOUBLE_PARSER);
       default:
         throw new SolrException(SolrException.ErrorCode.SERVER_ERROR, "Unknown type for trie field: " + field.name);
     }
@@ -480,24 +436,6 @@ public class TrieField extends FieldType {
   }
 
   @Override
-  public Object toObject(SchemaField sf, BytesRef term) {
-    switch (type) {
-      case INTEGER:
-        return NumericUtils.prefixCodedToInt(term);
-      case FLOAT:
-        return NumericUtils.sortableIntToFloat(NumericUtils.prefixCodedToInt(term));
-      case LONG:
-        return NumericUtils.prefixCodedToLong(term);
-      case DOUBLE:
-        return NumericUtils.sortableLongToDouble(NumericUtils.prefixCodedToLong(term));
-      case DATE:
-        return new Date(NumericUtils.prefixCodedToLong(term));
-      default:
-        throw new SolrException(SolrException.ErrorCode.SERVER_ERROR, "Unknown type for trie field: " + type);
-    }
-  }
-
-  @Override
   public String storedToIndexed(Fieldable f) {
     // TODO: optimize to remove redundant string conversion
     return readableToIndexed(storedToReadable(f));
@@ -552,7 +490,7 @@ public class TrieField extends FieldType {
 
     Field f;
     if (stored) {
-      f = new Field(field.getName(), arr);
+      f = new Field(field.getName(), arr, Field.Store.YES);
       if (indexed) f.setTokenStream(ts);
     } else {
       f = new Field(field.getName(), ts);
@@ -609,8 +547,12 @@ public class TrieField extends FieldType {
 
 class TrieDateFieldSource extends LongFieldSource {
 
-  public TrieDateFieldSource(LongValuesCreator creator) {
-    super(creator);
+  public TrieDateFieldSource(String field, FieldCache.LongParser parser) {
+    super(field, parser);
+  }
+
+  public TrieDateFieldSource(String field) {
+    super(field);
   }
 
   public String description() {

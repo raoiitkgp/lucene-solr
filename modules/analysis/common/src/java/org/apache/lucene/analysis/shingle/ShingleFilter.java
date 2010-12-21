@@ -103,11 +103,6 @@ public final class ShingleFilter extends TokenFilter {
   private boolean outputUnigrams = true;
 
   /**
-   * By default, we don't override behavior of outputUnigrams.
-   */
-  private boolean outputUnigramsIfNoShingles = false;
- 
-  /**
    * maximum shingle size (number of tokens)
    */
   private int maxShingleSize;
@@ -141,11 +136,6 @@ public final class ShingleFilter extends TokenFilter {
    * position.
    */
   private boolean isOutputHere = false;
-
-  /**
-   * true if no shingles have been output yet (for outputUnigramsIfNoShingles).
-   */
-  boolean noShingleOutput = true;
   
   private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
   private final OffsetAttribute offsetAtt = addAttribute(OffsetAttribute.class);
@@ -219,20 +209,6 @@ public final class ShingleFilter extends TokenFilter {
   public void setOutputUnigrams(boolean outputUnigrams) {
     this.outputUnigrams = outputUnigrams;
     gramSize = new CircularSequence();
-  }
-
-  /**
-   * <p>Shall we override the behavior of outputUnigrams==false for those
-   * times when no shingles are available (because there are fewer than
-   * minShingleSize tokens in the input stream)? (default: false.)
-   * <p>Note that if outputUnigrams==true, then unigrams are always output,
-   * regardless of whether any shingles are available.
-   *
-   * @param outputUnigramsIfNoShingles Whether or not to output a single
-   * unigram when no shingles are available.
-   */
-  public void setOutputUnigramsIfNoShingles(boolean outputUnigramsIfNoShingles) {
-    this.outputUnigramsIfNoShingles = outputUnigramsIfNoShingles;
   }
 
   /**
@@ -316,7 +292,6 @@ public final class ShingleFilter extends TokenFilter {
         termAtt.setEmpty().append(gramBuilder);
         if (gramSize.getValue() > 1) {
           typeAtt.setType(tokenType);
-          noShingleOutput = false;
         }
         offsetAtt.setOffset(offsetAtt.startOffset(), nextToken.offsetAtt.endOffset());
         isOutputHere = true;
@@ -420,10 +395,6 @@ public final class ShingleFilter extends TokenFilter {
         }
       }
     }
-    if (outputUnigramsIfNoShingles && noShingleOutput 
-        && gramSize.minValue > 1 && inputWindow.size() < minShingleSize) {
-      gramSize.minValue = 1;
-    }
     gramSize.reset();
     isOutputHere = false;
   }
@@ -435,11 +406,6 @@ public final class ShingleFilter extends TokenFilter {
     inputWindow.clear();
     numFillerTokensToInsert = 0;
     isOutputHere = false;
-    noShingleOutput = true;    
-    if (outputUnigramsIfNoShingles && ! outputUnigrams) {
-      // Fix up gramSize if minValue was reset for outputUnigramsIfNoShingles
-      gramSize.minValue = minShingleSize;
-    }
   }
 
 

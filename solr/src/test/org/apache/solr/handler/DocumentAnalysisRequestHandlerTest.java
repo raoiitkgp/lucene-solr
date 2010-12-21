@@ -104,8 +104,6 @@ public class DocumentAnalysisRequestHandlerTest extends AnalysisRequestHandlerTe
     field = document.getField("text");
     assertNotNull(field);
     assertEquals("The Text", field.getFirstValue());
-
-    req.close();
   }
 
   /**

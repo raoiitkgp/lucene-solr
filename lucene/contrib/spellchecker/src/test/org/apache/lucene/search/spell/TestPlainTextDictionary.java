@@ -39,7 +39,7 @@ public class TestPlainTextDictionary extends LuceneTestCase {
     String[] similar = spellChecker.suggestSimilar("treeword", 2);
     assertEquals(2, similar.length);
     assertEquals(similar[0], "threeword");
-    assertEquals(similar[1], "oneword");
+    assertEquals(similar[1], "twoword");
     spellChecker.close();
     ramDir.close();
   }

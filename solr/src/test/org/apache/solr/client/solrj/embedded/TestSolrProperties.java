@@ -17,15 +17,7 @@
 
 package org.apache.solr.client.solrj.embedded;
 
-import java.io.File;
-import java.io.FileInputStream;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
+import static junit.framework.Assert.assertEquals;
 
 import org.apache.lucene.util.LuceneTestCase;
 import org.apache.solr.SolrTestCaseJ4;
@@ -40,12 +32,14 @@ import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.core.CoreContainer;
 import org.apache.solr.util.AbstractSolrTestCase;
 import org.junit.After;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.io.File;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
 
 /**
  * @version $Id$
@@ -54,9 +48,6 @@ import org.w3c.dom.Node;
 public class TestSolrProperties extends LuceneTestCase {
   protected static Logger log = LoggerFactory.getLogger(TestSolrProperties.class);
   protected CoreContainer cores = null;
-  private File solrXml;
-  
-  private static final XPathFactory xpathFactory = XPathFactory.newInstance();
 
   public String getSolrHome() {
     return "solr/shared";
@@ -73,8 +64,8 @@ public class TestSolrProperties extends LuceneTestCase {
 
     log.info("pwd: " + (new File(".")).getAbsolutePath());
     File home = new File(getSolrHome());
-    solrXml = new File(home, "solr.xml");
-    cores = new CoreContainer(getSolrHome(), solrXml);
+    File f = new File(home, "solr.xml");
+    cores = new CoreContainer(getSolrHome(), f);
   }
 
   @After
@@ -184,22 +175,5 @@ public class TestSolrProperties extends LuceneTestCase {
     assertTrue("should have more recent time: " + after + "," + before, after > before);
 
     mcr = CoreAdminRequest.persist("solr-persist.xml", coreadmin);
-    
-    // System.out.println(IOUtils.toString(new FileInputStream(new File(solrXml.getParent(), "solr-persist.xml"))));
-    DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-    FileInputStream fis = new FileInputStream(new File(solrXml.getParent(), "solr-persist.xml"));
-    try {
-      Document document = builder.parse(fis);
-      assertTrue(exists("/solr/cores[@defaultCoreName='core0']", document));
-    } finally {
-      fis.close();
-    }
- 
-  }
-  
-  public static boolean exists(String xpathStr, Node node)
-      throws XPathExpressionException {
-    XPath xpath = xpathFactory.newXPath();
-    return (Boolean) xpath.evaluate(xpathStr, node, XPathConstants.BOOLEAN);
   }
 }

@@ -29,6 +29,7 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 import java.util.Collections;
+import java.util.Random;
 import java.util.Set;
 import java.util.HashSet;
 
@@ -39,12 +40,13 @@ public class TestRemoteSearchable extends RemoteTestCase {
   @BeforeClass
   public static void beforeClass() throws Exception {
     // construct an index
-    indexStore = newDirectory();
-    IndexWriter writer = new IndexWriter(indexStore, newIndexWriterConfig(
+    Random random = newStaticRandom(TestRemoteSearchable.class);
+    indexStore = newDirectory(random);
+    IndexWriter writer = new IndexWriter(indexStore, newIndexWriterConfig(random,
         TEST_VERSION_CURRENT, new MockAnalyzer()));
     Document doc = new Document();
-    doc.add(newField("test", "test text", Field.Store.YES, Field.Index.ANALYZED));
-    doc.add(newField("other", "other test text", Field.Store.YES, Field.Index.ANALYZED));
+    doc.add(newField(random, "test", "test text", Field.Store.YES, Field.Index.ANALYZED));
+    doc.add(newField(random, "other", "other test text", Field.Store.YES, Field.Index.ANALYZED));
     writer.addDocument(doc);
     writer.optimize();
     writer.close();
@@ -76,7 +78,7 @@ public class TestRemoteSearchable extends RemoteTestCase {
     document = searcher.doc(0, fs);
     assertTrue("document is null and it shouldn't be", document != null);
     assertTrue("document.getFields() Size: " + document.getFields().size() + " is not: " + 1, document.getFields().size() == 1);
-    fs = new MapFieldSelector("other");
+    fs = new MapFieldSelector(new String[]{"other"});
     document = searcher.doc(0, fs);
     assertTrue("document is null and it shouldn't be", document != null);
     assertTrue("document.getFields() Size: " + document.getFields().size() + " is not: " + 1, document.getFields().size() == 1);

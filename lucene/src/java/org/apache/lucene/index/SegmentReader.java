@@ -39,6 +39,7 @@ import org.apache.lucene.store.IndexOutput;
 import org.apache.lucene.util.BitVector;
 import org.apache.lucene.util.Bits;
 import org.apache.lucene.util.CloseableThreadLocal;
+import org.apache.lucene.index.codecs.CodecProvider;
 import org.apache.lucene.index.codecs.FieldsProducer;
 import org.apache.lucene.search.FieldCache; // not great (circular); used only to purge FieldCache entry on close
 import org.apache.lucene.util.BytesRef;
@@ -89,6 +90,7 @@ public class SegmentReader extends IndexReader implements Cloneable {
     final FieldInfos fieldInfos;
 
     final FieldsProducer fields;
+    final CodecProvider codecs;
     
     final Directory dir;
     final Directory cfsDir;
@@ -102,14 +104,17 @@ public class SegmentReader extends IndexReader implements Cloneable {
     CompoundFileReader cfsReader;
     CompoundFileReader storeCFSReader;
 
-    CoreReaders(SegmentReader origInstance, Directory dir, SegmentInfo si, int readBufferSize, int termsIndexDivisor) throws IOException {
+    CoreReaders(SegmentReader origInstance, Directory dir, SegmentInfo si, int readBufferSize, int termsIndexDivisor, CodecProvider codecs) throws IOException {
 
       if (termsIndexDivisor == 0) {
         throw new IllegalArgumentException("indexDivisor must be < 0 (don't load terms index) or greater than 0 (got 0)");
       }
 
       segment = si.name;
-      final SegmentCodecs segmentCodecs = si.getSegmentCodecs();
+      if (codecs == null) {
+        codecs = CodecProvider.getDefault();
+      }
+      this.codecs = codecs;      
       this.readBufferSize = readBufferSize;
       this.dir = dir;
 
@@ -124,11 +129,11 @@ public class SegmentReader extends IndexReader implements Cloneable {
         cfsDir = dir0;
 
         fieldInfos = new FieldInfos(cfsDir, IndexFileNames.segmentFileName(segment, "", IndexFileNames.FIELD_INFOS_EXTENSION));
-        
+
         this.termsIndexDivisor = termsIndexDivisor;
-        
+
         // Ask codec for its Fields
-        fields = segmentCodecs.codec().fieldsProducer(new SegmentReadState(cfsDir, si, fieldInfos, readBufferSize, termsIndexDivisor));
+        fields = si.getCodec().fieldsProducer(new SegmentReadState(cfsDir, si, fieldInfos, readBufferSize, termsIndexDivisor));
         assert fields != null;
 
         success = true;
@@ -243,7 +248,7 @@ public class SegmentReader extends IndexReader implements Cloneable {
           throw new CorruptIndexException("doc counts differ for segment " + segment + ": fieldsReader shows " + fieldsReaderOrig.size() + " but segmentInfo shows " + si.docCount);
         }
 
-        if (si.getHasVectors()) { // open term vector files only as needed
+        if (fieldInfos.hasVectors()) { // open term vector files only as needed
           termVectorsReaderOrig = new TermVectorsReader(storeDir, storesSegment, fieldInfos, readBufferSize, si.getDocStoreOffset(), si.docCount);
         }
       }
@@ -501,7 +506,7 @@ public class SegmentReader extends IndexReader implements Cloneable {
    * @throws IOException if there is a low-level IO error
    */
   public static SegmentReader get(boolean readOnly, SegmentInfo si, int termInfosIndexDivisor) throws CorruptIndexException, IOException {
-    return get(readOnly, si.dir, si, BufferedIndexInput.BUFFER_SIZE, true, termInfosIndexDivisor);
+    return get(readOnly, si.dir, si, BufferedIndexInput.BUFFER_SIZE, true, termInfosIndexDivisor, null);
   }
 
   /**
@@ -513,8 +518,12 @@ public class SegmentReader extends IndexReader implements Cloneable {
                                   SegmentInfo si,
                                   int readBufferSize,
                                   boolean doOpenStores,
-                                  int termInfosIndexDivisor)
+                                  int termInfosIndexDivisor,
+                                  CodecProvider codecs)
     throws CorruptIndexException, IOException {
+    if (codecs == null)  {
+      codecs = CodecProvider.getDefault();
+    }
     
     SegmentReader instance = new SegmentReader();
     instance.readOnly = readOnly;
@@ -524,7 +533,7 @@ public class SegmentReader extends IndexReader implements Cloneable {
     boolean success = false;
 
     try {
-      instance.core = new CoreReaders(instance, dir, si, readBufferSize, termInfosIndexDivisor);
+      instance.core = new CoreReaders(instance, dir, si, readBufferSize, termInfosIndexDivisor, codecs);
       if (doOpenStores) {
         instance.core.openDocStores(si);
       }
@@ -740,8 +749,6 @@ public class SegmentReader extends IndexReader implements Cloneable {
   private void commitChanges(Map<String,String> commitUserData) throws IOException {
     if (deletedDocsDirty) {               // re-write deleted
       si.advanceDelGen();
-
-      assert deletedDocs.length() == si.docCount;
 
       // We can write directly to the actual name (vs to a
       // .tmp & renaming it) because the file is not live
@@ -1239,6 +1246,33 @@ public class SegmentReader extends IndexReader implements Cloneable {
   @Override
   public final Object getCoreCacheKey() {
     return core;
+  }
+  
+  /**
+   * Lotsa tests did hacks like:<br/>
+   * SegmentReader reader = (SegmentReader) IndexReader.open(dir);<br/>
+   * They broke. This method serves as a hack to keep hacks working
+   * We do it with R/W access for the tests (BW compatibility)
+   * @deprecated Remove this when tests are fixed!
+   */
+  @Deprecated
+  static SegmentReader getOnlySegmentReader(Directory dir) throws IOException {
+    return getOnlySegmentReader(IndexReader.open(dir, false));
+  }
+
+  static SegmentReader getOnlySegmentReader(IndexReader reader) {
+    if (reader instanceof SegmentReader)
+      return (SegmentReader) reader;
+
+    if (reader instanceof DirectoryReader) {
+      IndexReader[] subReaders = reader.getSequentialSubReaders();
+      if (subReaders.length != 1)
+        throw new IllegalArgumentException(reader + " has " + subReaders.length + " segments instead of exactly one");
+
+      return (SegmentReader) subReaders[0];
+    }
+
+    throw new IllegalArgumentException(reader + " is not a SegmentReader or a single-segment DirectoryReader");
   }
 
   @Override

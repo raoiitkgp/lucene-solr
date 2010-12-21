@@ -21,29 +21,29 @@ import java.io.IOException;
 import java.util.Comparator;
 
 import org.apache.lucene.index.FieldInfos;
-import org.apache.lucene.index.codecs.PostingsReaderBase;
-import org.apache.lucene.index.codecs.PrefixCodedTermsReader;
-import org.apache.lucene.index.codecs.PrefixCodedTermsWriter;
-import org.apache.lucene.index.codecs.TermsIndexReaderBase;
+import org.apache.lucene.index.codecs.standard.StandardPostingsReader;
+import org.apache.lucene.index.codecs.standard.StandardTermsDictReader;
+import org.apache.lucene.index.codecs.standard.StandardTermsDictWriter;
+import org.apache.lucene.index.codecs.standard.StandardTermsIndexReader;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.IndexInput;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.CodecUtil;
 
-public class AppendingTermsDictReader extends PrefixCodedTermsReader {
+public class AppendingTermsDictReader extends StandardTermsDictReader {
 
-  public AppendingTermsDictReader(TermsIndexReaderBase indexReader,
+  public AppendingTermsDictReader(StandardTermsIndexReader indexReader,
           Directory dir, FieldInfos fieldInfos, String segment,
-          PostingsReaderBase postingsReader, int readBufferSize,
-          Comparator<BytesRef> termComp, int termsCacheSize, String codecId) throws IOException {
+          StandardPostingsReader postingsReader, int readBufferSize,
+          Comparator<BytesRef> termComp, int termsCacheSize) throws IOException {
     super(indexReader, dir, fieldInfos, segment, postingsReader, readBufferSize,
-            termComp, termsCacheSize, codecId);
+            termComp, termsCacheSize);
   }
   
   @Override
   protected void readHeader(IndexInput in) throws IOException {
     CodecUtil.checkHeader(in, AppendingTermsDictWriter.CODEC_NAME,
-      PrefixCodedTermsWriter.VERSION_START, PrefixCodedTermsWriter.VERSION_CURRENT);    
+      StandardTermsDictWriter.VERSION_START, StandardTermsDictWriter.VERSION_CURRENT);    
   }
 
   @Override

@@ -241,7 +241,7 @@ public class DisMaxQParser extends QParser {
 
   @Override
   public Query getHighlightQuery() throws ParseException {
-    return parsedUserQuery == null ? altUserQuery : parsedUserQuery;
+    return parsedUserQuery;
   }
 
   public void addDebugInfo(NamedList<Object> debugInfo) {

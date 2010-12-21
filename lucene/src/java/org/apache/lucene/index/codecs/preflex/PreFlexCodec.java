@@ -32,7 +32,7 @@ import org.apache.lucene.index.codecs.FieldsProducer;
  *  format.  It does not provide a writer because newly
  *  written segments should use StandardCodec.
  *
- * @deprecated (4.0) This is only used to read indexes created
+ * @deprecated This is only used to read indexes created
  * before 4.0.
  * @lucene.experimental
  */
@@ -66,8 +66,7 @@ public class PreFlexCodec extends Codec {
   }
 
   @Override
-  public void files(Directory dir, SegmentInfo info, String id, Set<String> files) throws IOException {
-    // preflex fields have no codec ID - we ignore it here
+  public void files(Directory dir, SegmentInfo info, Set<String> files) throws IOException {
     PreFlexFields.files(dir, info, files);
   }
 

@@ -31,7 +31,6 @@ public class ShingleFilterFactory extends BaseTokenFilterFactory {
   private int minShingleSize;
   private int maxShingleSize;
   private boolean outputUnigrams;
-  private boolean outputUnigramsIfNoShingles;
   private String tokenSeparator;
 
   public void init(Map<String, String> args) {
@@ -57,7 +56,6 @@ public class ShingleFilterFactory extends BaseTokenFilterFactory {
                               + maxShingleSize + ")");
     }
     outputUnigrams = getBoolean("outputUnigrams", true);
-    outputUnigramsIfNoShingles = getBoolean("outputUnigramsIfNoShingles", false);
     tokenSeparator = args.containsKey("tokenSeparator")
                      ? args.get("tokenSeparator")
                      : ShingleFilter.TOKEN_SEPARATOR;
@@ -65,7 +63,6 @@ public class ShingleFilterFactory extends BaseTokenFilterFactory {
   public ShingleFilter create(TokenStream input) {
     ShingleFilter r = new ShingleFilter(input, minShingleSize, maxShingleSize);
     r.setOutputUnigrams(outputUnigrams);
-    r.setOutputUnigramsIfNoShingles(outputUnigramsIfNoShingles);
     r.setTokenSeparator(tokenSeparator);
     return r;
   }

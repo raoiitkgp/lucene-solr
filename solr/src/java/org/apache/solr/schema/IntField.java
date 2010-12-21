@@ -18,8 +18,6 @@
 package org.apache.solr.schema;
 
 import org.apache.lucene.search.SortField;
-import org.apache.lucene.search.cache.CachedArrayCreator;
-import org.apache.lucene.search.cache.IntValuesCreator;
 import org.apache.solr.search.function.ValueSource;
 import org.apache.solr.search.function.IntFieldSource;
 import org.apache.lucene.document.Fieldable;
@@ -41,7 +39,7 @@ public class IntField extends FieldType {
   }
 
   public ValueSource getValueSource(SchemaField field) {
-    return new IntFieldSource(new IntValuesCreator( field.name, null, CachedArrayCreator.CACHE_VALUES_AND_BITS ) );
+    return new IntFieldSource(field.name);
   }
 
   public void write(XMLWriter xmlWriter, String name, Fieldable f) throws IOException {
