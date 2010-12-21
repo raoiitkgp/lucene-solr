@@ -1,3 +1,12 @@
+lucene-solr (4.0+20100920-1sg37) UNRELEASED; urgency=low
+
+  [ Ian Eure ]
+  * Fix $(VERSION).
+
+  [ SimpleGeo Nerds ]
+
+ -- SimpleGeo Nerds <nerds@simplegeo.com>  Tue, 21 Dec 2010 20:01:55 +0000
+
 lucene-solr (4.0+20100920-1sg34) foss-development; urgency=low
 
   * Revert back to 2010/09/20 Solr build.
